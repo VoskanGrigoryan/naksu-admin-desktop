@@ -46,6 +46,7 @@ const EnrollmentsSection = ({
 
   useEffect(() => {
     if (events.length === 0) setEvents(mockCalendarEvents);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const enrolledEventIds = new Set(enrollments.map((e) => e.eventId));

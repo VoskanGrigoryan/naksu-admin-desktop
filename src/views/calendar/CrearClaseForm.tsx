@@ -12,7 +12,7 @@ import {
 import { DateInput, TimePicker } from "@mantine/dates";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import { useEffect } from "react";
-import { z } from "zod";
+import type { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { CalendarEvent } from "../../types/calendar";
 import { useCalendarStore } from "../../store/calendarStore";
@@ -49,6 +49,7 @@ const CrearClaseForm = ({ onSubmit, initialValues }: Props) => {
 
   useEffect(() => {
     if (users.length === 0) setUsers(mockUsers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const activitySuggestions = Array.from(
@@ -65,6 +66,7 @@ const CrearClaseForm = ({ onSubmit, initialValues }: Props) => {
     reset,
     formState: { errors },
   } = useForm<FormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(eventSchema) as any,
     defaultValues: initialValues
       ? mapEventToFormValues(initialValues)

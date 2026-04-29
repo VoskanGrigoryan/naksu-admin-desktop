@@ -1,6 +1,6 @@
 import { Group, Paper, Textarea } from "@mantine/core";
 
-const AdditionalInfoForm = ({}) => {
+const AdditionalInfoForm = () => {
   return (
     <Paper
       //   shadow={isEditing ? "xl" : "sm"}

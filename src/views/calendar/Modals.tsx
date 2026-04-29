@@ -7,7 +7,7 @@ import {
   ColorSwatch,
   Divider,
 } from "@mantine/core";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import CrearClaseForm from "./CrearClaseForm";
 import CustomButton from "../../components/reusable/Button";
 import { IconEdit, IconTrash, IconAlertTriangle } from "@tabler/icons-react";
@@ -78,9 +78,10 @@ export const ConfirmActionModal = ({
 }: ConfirmActionModalProps) => {
   const [isConfirming, setIsConfirming] = useState(false);
 
-  useEffect(() => {
-    if (!opened) setIsConfirming(false);
-  }, [opened]);
+  const handleClose = () => {
+    setIsConfirming(false);
+    onClose();
+  };
 
   if (!event) return null;
 
@@ -92,7 +93,7 @@ export const ConfirmActionModal = ({
     <Modal
       size="sm"
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title={
         <Title order={3} fw={500}>
           {formattedTitle}

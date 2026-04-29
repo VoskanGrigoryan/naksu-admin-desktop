@@ -34,7 +34,7 @@ type Props = {
   withPaper?: boolean;
 };
 
-export const allClassesAvailable = [
+const allClassesAvailable = [
   { value: "muay_thai", label: "Muay Thai" },
   { value: "sipalki_do", label: "Sipalki Do" },
   { value: "competidores", label: "Competidores" },

@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import {
   Badge,
   Box,
-  Divider,
   Grid,
   Group,
   NumberFormatter,
@@ -78,6 +77,7 @@ const Dashboard = () => {
   useEffect(() => {
     setUsers(mockUsers);
     setEvents(mockCalendarEvents);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Paying users = clients + both (trainers don't pay)
