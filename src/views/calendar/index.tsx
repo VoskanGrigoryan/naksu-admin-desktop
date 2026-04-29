@@ -5,35 +5,35 @@ import CrearClaseForm from "./CrearClaseForm";
 import HeaderControls from "./Header";
 import type { CalendarEvent } from "../../types/calendar";
 import { useCalendarStore } from "../../store/calendarStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Calendar from "./Calendar";
+import { mockCalendarEvents } from "../../mocks/calendarData";
+
 const CalendarView = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const addEvent = useCalendarStore((s) => s.addEvent);
-  const events = useCalendarStore((s) => s.events);
+  const { events, setEvents } = useCalendarStore();
+
+  useEffect(() => {
+    if (events.length === 0) setEvents(mockCalendarEvents);
+  }, []);
 
   const [filters, setFilters] = useState({
-    instructor: "Todos",
-    activity: "Todas",
+    instructors: [] as string[],
+    activities: [] as string[],
   });
 
   const handleSubmit = (event: CalendarEvent) => {
     addEvent(event);
   };
 
-  const handleFilter = (newFilters: {
-    instructor: string;
-    activity: string;
-  }) => {
-    setFilters(newFilters);
-  };
-
   const filteredEvents = events.filter((e) => {
     const matchesInstructor =
-      filters.instructor === "Todos" ||
-      e.extendedProps?.instructor === filters.instructor;
+      filters.instructors.length === 0 ||
+      filters.instructors.includes(e.extendedProps?.instructor ?? "");
     const matchesActivity =
-      filters.activity === "Todas" || e.title === filters.activity;
+      filters.activities.length === 0 ||
+      filters.activities.includes(e.title ?? "");
     return matchesInstructor && matchesActivity;
   });
 
@@ -42,7 +42,7 @@ const CalendarView = () => {
       <Stack gap="md" style={{ height: "100%" }}>
         <HeaderControls
           open={open}
-          onFilter={handleFilter}
+          onFilter={setFilters}
           filters={filters}
           events={events}
         />

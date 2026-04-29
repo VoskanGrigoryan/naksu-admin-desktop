@@ -3,7 +3,27 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import { BrowserRouter } from "react-router-dom";
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider, createTheme, type MantineColorsTuple } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
+
+const blue: MantineColorsTuple = [
+  "#eff6ff",
+  "#dbeafe",
+  "#bfdbfe",
+  "#93c5fd",
+  "#60a5fa",
+  "#3b82f6",
+  "#2563eb",
+  "#1d4ed8",
+  "#1e40af",
+  "#1e3a8a",
+];
+
+const theme = createTheme({
+  colors: { blue },
+  primaryColor: "blue",
+  primaryShade: 6,
+});
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
@@ -17,6 +37,7 @@ createRoot(document.getElementById("root")!).render(
       forceColorScheme="light"
       defaultColorScheme="light"
       theme={{
+        ...theme,
         components: {
           Input: {
             styles: {
@@ -38,6 +59,7 @@ createRoot(document.getElementById("root")!).render(
         },
       }}
     >
+      <Notifications position="top-right" />
       <DatesProvider settings={{ locale: "es" }}>
         <BrowserRouter>
           <App />

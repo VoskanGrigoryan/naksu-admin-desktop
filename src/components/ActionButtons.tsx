@@ -1,17 +1,19 @@
 import { Group, Title } from "@mantine/core";
+import type { ReactNode } from "react";
 import CustomButton from "./reusable/Button";
 import { IconCancel, IconCheck, IconEdit } from "@tabler/icons-react";
 
 /* -------------------- types -------------------- */
 
-export type Section = "userInfo" | "userPlan" | "additionalInfo";
+export type Section = "userInfo" | "userPlan" | "additionalInfo" | "enrollments";
 
 type SectionActionsProps = {
   title: string;
   section: Section;
   editingSection: Section | null;
   setEditingSection: (section: Section | null) => void;
-  onSave?: () => void; 
+  onSave?: () => void;
+  editingActions?: ReactNode;
 };
 
 const SectionActions = ({
@@ -20,6 +22,7 @@ const SectionActions = ({
   editingSection,
   setEditingSection,
   onSave,
+  editingActions,
 }: SectionActionsProps) => {
   const isEditing = editingSection === section;
   const isOtherEditing = editingSection !== null && editingSection !== section;
@@ -34,10 +37,11 @@ const SectionActions = ({
   };
 
   return (
-    <Group justify="space-between">
+    <Group justify="space-between" mb="md">
       <Title order={2} fw={500}>{title}</Title>
 
-      <Group style={{ marginBottom: 12 }}>
+      <Group>
+        {isEditing && editingActions}
         <CustomButton
           rightSection={
             !isEditing ? (
@@ -48,6 +52,7 @@ const SectionActions = ({
           }
           disabled={isOtherEditing}
           color={!isEditing ? "blue" : "green"}
+          variant={isEditing ? "outline" : "filled"}
           onClick={handlePrimaryAction}
         >
           {!isEditing ? "Editar" : "Guardar"}
@@ -55,9 +60,9 @@ const SectionActions = ({
 
         {isEditing && (
           <CustomButton
-            color="var(--mantine-color-red-6)"
+            color="red"
             rightSection={<IconCancel size={20} stroke={1.5} style={{ paddingBottom: 4 }} />}
-            variant="filled"
+            variant="light"
             onClick={() => setEditingSection(null)}
           >
             Cancelar

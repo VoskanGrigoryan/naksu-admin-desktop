@@ -16,7 +16,7 @@ const AuthView = () => {
         <div className={styles.logoContainer}>
           <img src={naksuLogo} alt="Naksu Logo" style={{ height: 130 }} />
         </div>
-        <Paper shadow="xl" radius="md" p="xl" className={styles.paper} style={{backgroundColor: 'var(--mantine-color-gray-2)'}}>
+        <Paper shadow="xl" radius="md" p="xl" className={styles.paper}>
           <Stack gap="md">
             <Input placeholder="Usuario" leftSection={<IconUser size={18} />} />
             <PasswordInput

@@ -17,12 +17,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--mantine-color-white);
-  transition: background-color 150ms ease;
+  color: rgba(255, 255, 255, 0.65);
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
 .link:hover {
-  background-color: var(--mantine-color-blue-7);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .link[data-active],

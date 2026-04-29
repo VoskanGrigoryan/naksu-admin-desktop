@@ -1,4 +1,4 @@
-import { ActionIcon, Group, Paper, Title } from "@mantine/core";
+import { ActionIcon, Group, Paper, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import CustomButton from "../../components/reusable/Button";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
@@ -19,6 +19,7 @@ const Calendar = ({ events }: { events: CalendarEvent[] }) => {
   const updateEvent = useCalendarStore((s) => s.updateEvent);
 
   const [selectedEvent, setSelectedEvent] = useState<EventApi | null>(null);
+  const [weekLabel, setWeekLabel] = useState("");
 
   const [opened, { open, close }] = useDisclosure(false);
   const [editOpened, { open: openEdit, close: closeEdit }] =
@@ -56,7 +57,14 @@ const Calendar = ({ events }: { events: CalendarEvent[] }) => {
           radius="md"
         >
           <Group justify="space-between" mb="md">
-            <Title order={3}>Calendario semanal</Title>
+            <div>
+              <Title order={3}>Calendario semanal</Title>
+              {weekLabel && (
+                <Text size="sm" c="dimmed" mt={2}>
+                  {weekLabel}
+                </Text>
+              )}
+            </div>
 
             <Group>
               <ActionIcon variant="light" onClick={handlePrev}>
@@ -91,6 +99,15 @@ const Calendar = ({ events }: { events: CalendarEvent[] }) => {
             editable
             selectable
             events={events}
+            datesSet={(info) => {
+              const end = new Date(info.end);
+              end.setDate(end.getDate() - 1);
+              const fmt = (d: Date) =>
+                d.toLocaleDateString("es", { day: "numeric", month: "short" });
+              setWeekLabel(
+                `${fmt(info.start)} – ${fmt(end)} ${end.getFullYear()}`,
+              );
+            }}
             eventClick={(info) => {
               setSelectedEvent(info.event);
               open();
@@ -103,6 +120,7 @@ const Calendar = ({ events }: { events: CalendarEvent[] }) => {
         opened={opened}
         onClose={handleCloseDetails}
         event={selectedEvent}
+        originalEvent={originalEvent}
         onEdit={() => {
           close();
           openEdit();
@@ -116,13 +134,7 @@ const Calendar = ({ events }: { events: CalendarEvent[] }) => {
         event={originalEvent}
         onSubmit={(updated) => {
           if (!originalEvent) return;
-
-          const mergedEvent: CalendarEvent = {
-            ...originalEvent,
-            ...updated,
-          };
-
-          updateEvent(originalEvent.id, mergedEvent);
+          updateEvent(originalEvent.id, { ...originalEvent, ...updated });
         }}
       />
     </>

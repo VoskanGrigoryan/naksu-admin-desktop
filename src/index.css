@@ -1,3 +1,5 @@
+@layer mantine, mantine-datatable;
+
 :root {
   font-family:
     system-ui,
@@ -16,6 +18,7 @@ body {
   padding: 0;
   overflow: hidden;
   min-height: 100vh;
+  background-color: #f1f5f9;
 }
 
 #root {
@@ -28,5 +31,3 @@ body {
 .mantine-datatable-table[data-highlight-on-hover] tbody tr:hover {
   background: var(--mantine-color-gray-2) !important;
 }
-
-@layer mantine, mantine-datatable;

@@ -7,16 +7,12 @@ export const mockUsers: User[] = [
     phone: "11 4321 7788",
     email: "juan.perez@gmail.com",
     birthday: new Date(1989, 1, 14),
-    classes: [
-      {
-        classType: "boxeo",
-        totalClasses: 16,
-        amountPaid: 16000,
-        pricePerClass: 1000,
-      },
-    ],
+    memberships: [{ classType: "boxeo", totalClasses: 16, amountPaid: 16000, pricePerClass: 1000 }],
+    enrollments: [{ id: "enr-001", eventId: "ev-002" }],
     active: true,
     lastActive: new Date(2024, 5, 11),
+    role: "client",
+    teachingDisciplines: [],
   },
   {
     id: "u-002",
@@ -24,16 +20,12 @@ export const mockUsers: User[] = [
     phone: "11 4988 1122",
     email: "carla.gomez@yahoo.com",
     birthday: new Date(1993, 6, 8),
-    classes: [
-      {
-        classType: "yoga",
-        totalClasses: 8,
-        amountPaid: 4000,
-        pricePerClass: 1000,
-      },
-    ],
+    memberships: [{ classType: "yoga", totalClasses: 8, amountPaid: 4000, pricePerClass: 1000 }],
+    enrollments: [],
     active: true,
     lastActive: null,
+    role: "trainer",
+    teachingDisciplines: ["yoga"],
   },
   {
     id: "u-003",
@@ -41,22 +33,18 @@ export const mockUsers: User[] = [
     phone: "11 4555 9900",
     email: "matias.rojas@gmail.com",
     birthday: new Date(1985, 10, 21),
-    classes: [
-      {
-        classType: "kick_boxing",
-        totalClasses: 12,
-        amountPaid: 12000,
-        pricePerClass: 1000,
-      },
-      {
-        classType: "muay_thai",
-        totalClasses: 12,
-        amountPaid: 12000,
-        pricePerClass: 1000,
-      },
+    memberships: [
+      { classType: "kick_boxing", totalClasses: 12, amountPaid: 12000, pricePerClass: 1000 },
+      { classType: "muay_thai", totalClasses: 12, amountPaid: 12000, pricePerClass: 1000 },
+    ],
+    enrollments: [
+      { id: "enr-002", eventId: "ev-001" },
+      { id: "enr-003", eventId: "ev-004" },
     ],
     active: true,
     lastActive: new Date(2024, 5, 9),
+    role: "both",
+    teachingDisciplines: ["kick_boxing", "muay_thai"],
   },
   {
     id: "u-004",
@@ -64,16 +52,12 @@ export const mockUsers: User[] = [
     phone: "11 4666 3344",
     email: "lucia.fernandez@hotmail.com",
     birthday: new Date(1998, 0, 30),
-    classes: [
-      {
-        classType: "boxeo_comp_thai",
-        totalClasses: 12,
-        amountPaid: 6000,
-        pricePerClass: 1000,
-      },
-    ],
+    memberships: [{ classType: "boxeo_comp_thai", totalClasses: 12, amountPaid: 6000, pricePerClass: 1000 }],
+    enrollments: [],
     active: false,
     lastActive: new Date(2024, 4, 28),
+    role: "client",
+    teachingDisciplines: [],
   },
   {
     id: "u-005",
@@ -81,16 +65,12 @@ export const mockUsers: User[] = [
     phone: "11 4777 8899",
     email: "diego.morales@gmail.com",
     birthday: new Date(1991, 8, 3),
-    classes: [
-      {
-        classType: "muay_thai",
-        totalClasses: 20,
-        amountPaid: 20000,
-        pricePerClass: 1000,
-      },
-    ],
+    memberships: [{ classType: "muay_thai", totalClasses: 20, amountPaid: 20000, pricePerClass: 1000 }],
+    enrollments: [{ id: "enr-004", eventId: "ev-001" }],
     active: true,
     lastActive: new Date(2024, 5, 10),
+    role: "client",
+    teachingDisciplines: [],
   },
   {
     id: "u-006",
@@ -98,22 +78,18 @@ export const mockUsers: User[] = [
     phone: "11 4999 2211",
     email: "sofia.castillo@gmail.com",
     birthday: new Date(2000, 3, 17),
-    classes: [
-      {
-        classType: "yoga",
-        totalClasses: 8,
-        amountPaid: 8000,
-        pricePerClass: 1000,
-      },
-      {
-        classType: "boxeo",
-        totalClasses: 8,
-        amountPaid: 8000,
-        pricePerClass: 1000,
-      },
+    memberships: [
+      { classType: "yoga", totalClasses: 8, amountPaid: 8000, pricePerClass: 1000 },
+      { classType: "boxeo", totalClasses: 8, amountPaid: 8000, pricePerClass: 1000 },
+    ],
+    enrollments: [
+      { id: "enr-005", eventId: "ev-003" },
+      { id: "enr-006", eventId: "ev-002" },
     ],
     active: true,
     lastActive: null,
+    role: "client",
+    teachingDisciplines: [],
   },
   {
     id: "u-007",
@@ -121,22 +97,15 @@ export const mockUsers: User[] = [
     phone: "11 4888 5566",
     email: "fede.nunez@outlook.com",
     birthday: new Date(1982, 5, 5),
-    classes: [
-      {
-        classType: "boxeo",
-        totalClasses: 12,
-        amountPaid: 12000,
-        pricePerClass: 1000,
-      },
-      {
-        classType: "competidores",
-        totalClasses: 8,
-        amountPaid: 12000,
-        pricePerClass: 1000,
-      },
+    memberships: [
+      { classType: "boxeo", totalClasses: 12, amountPaid: 12000, pricePerClass: 1000 },
+      { classType: "competidores", totalClasses: 8, amountPaid: 12000, pricePerClass: 1000 },
     ],
+    enrollments: [{ id: "enr-007", eventId: "ev-002" }],
     active: true,
     lastActive: new Date(2024, 5, 7),
+    role: "trainer",
+    teachingDisciplines: ["boxeo", "competidores"],
   },
   {
     id: "u-008",
@@ -144,16 +113,12 @@ export const mockUsers: User[] = [
     phone: "11 4333 6677",
     email: "valen.ruiz@gmail.com",
     birthday: new Date(1996, 11, 11),
-    classes: [
-      {
-        classType: "muay_thai",
-        totalClasses: 12,
-        amountPaid: 6000,
-        pricePerClass: 1000,
-      },
-    ],
+    memberships: [{ classType: "muay_thai", totalClasses: 12, amountPaid: 6000, pricePerClass: 1000 }],
+    enrollments: [],
     active: false,
     lastActive: new Date(2024, 4, 15),
+    role: "client",
+    teachingDisciplines: [],
   },
   {
     id: "u-009",
@@ -161,16 +126,12 @@ export const mockUsers: User[] = [
     phone: "11 4012 8890",
     email: "n.herrera@gmail.com",
     birthday: new Date(1987, 2, 22),
-    classes: [
-      {
-        classType: "kick_boxing",
-        totalClasses: 16,
-        amountPaid: 16000,
-        pricePerClass: 1000,
-      },
-    ],
+    memberships: [{ classType: "kick_boxing", totalClasses: 16, amountPaid: 16000, pricePerClass: 1000 }],
+    enrollments: [{ id: "enr-008", eventId: "ev-004" }],
     active: true,
     lastActive: new Date(2024, 5, 12),
+    role: "trainer",
+    teachingDisciplines: ["kick_boxing", "sipalki_do"],
   },
   {
     id: "u-010",
@@ -178,15 +139,11 @@ export const mockUsers: User[] = [
     phone: "11 4221 3345",
     email: "camila.suarez@gmail.com",
     birthday: new Date(1999, 7, 19),
-    classes: [
-      {
-        classType: "yoga",
-        totalClasses: 8,
-        amountPaid: 4000,
-        pricePerClass: 1000,
-      },
-    ],
+    memberships: [{ classType: "yoga", totalClasses: 8, amountPaid: 4000, pricePerClass: 1000 }],
+    enrollments: [{ id: "enr-009", eventId: "ev-003" }],
     active: true,
     lastActive: null,
+    role: "client",
+    teachingDisciplines: [],
   },
 ];

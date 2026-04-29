@@ -1,7 +1,6 @@
-import { Group, Select } from "@mantine/core";
+import { Group, MultiSelect } from "@mantine/core";
 import CustomButton from "../../components/reusable/Button";
-import { IconFilter, IconFilterOff, IconPlus } from "@tabler/icons-react";
-import { useState } from "react";
+import { IconFilterOff, IconPlus } from "@tabler/icons-react";
 import type { CalendarEvent } from "../../types/calendar";
 
 const HeaderControls = ({
@@ -11,61 +10,45 @@ const HeaderControls = ({
   events,
 }: {
   open: () => void;
-  filters: { instructor: string; activity: string };
-  onFilter: (filters: { instructor: string; activity: string }) => void;
+  filters: { instructors: string[]; activities: string[] };
+  onFilter: (filters: { instructors: string[]; activities: string[] }) => void;
   events: CalendarEvent[];
 }) => {
-  const [instructor, setInstructor] = useState(filters.instructor);
-  const [activity, setActivity] = useState(filters.activity);
+  const isDefault =
+    filters.instructors.length === 0 && filters.activities.length === 0;
 
-  const isDefault = instructor === "Todos" && activity === "Todas";
-
-  const instructorOptions: string[] = [
-    "Todos",
-    ...Array.from(
-      new Set(
-        events
-          .map((e) => e.extendedProps?.instructor)
-          .filter((i): i is string => Boolean(i)),
-      ),
+  const instructorOptions: string[] = Array.from(
+    new Set(
+      events
+        .map((e) => e.extendedProps?.instructor)
+        .filter((i): i is string => Boolean(i)),
     ),
-  ];
+  );
 
-  const activityOptions: string[] = [
-    "Todas",
-    ...Array.from(
-      new Set(
-        events.map((e) => e.title).filter((t): t is string => Boolean(t)),
-      ),
+  const activityOptions: string[] = Array.from(
+    new Set(
+      events.map((e) => e.title).filter((t): t is string => Boolean(t)),
     ),
-  ];
+  );
 
   return (
     <Group justify="space-between" wrap="nowrap">
       <Group>
-        <Select
+        <MultiSelect
           placeholder="Instructor"
           data={instructorOptions}
-          w={200}
-          value={instructor}
-          onChange={(v) => setInstructor(v!)}
+          w={300}
+          value={filters.instructors}
+          onChange={(v) => onFilter({ ...filters, instructors: v })}
         />
 
-        <Select
+        <MultiSelect
           placeholder="Actividad"
           data={activityOptions}
-          w={200}
-          value={activity}
-          onChange={(v) => setActivity(v!)}
+          w={300}
+          value={filters.activities}
+          onChange={(v) => onFilter({ ...filters, activities: v })}
         />
-
-        <CustomButton
-          disabled={isDefault}
-          rightSection={<IconFilter size={16} style={{ marginBottom: 4 }} />}
-          onClick={() => onFilter({ instructor, activity })}
-        >
-          Filtrar
-        </CustomButton>
 
         {!isDefault && (
           <CustomButton
@@ -73,11 +56,7 @@ const HeaderControls = ({
               <IconFilterOff size={16} style={{ marginBottom: 4 }} />
             }
             variant="outline"
-            onClick={() => {
-              setInstructor("Todos");
-              setActivity("Todas");
-              onFilter({ instructor: "Todos", activity: "Todas" });
-            }}
+            onClick={() => onFilter({ instructors: [], activities: [] })}
           >
             Limpiar filtro
           </CustomButton>

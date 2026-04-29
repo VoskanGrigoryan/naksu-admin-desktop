@@ -1,0 +1,48 @@
+import type { CalendarEvent } from "../types/calendar";
+
+export const mockCalendarEvents: CalendarEvent[] = [
+  {
+    id: "ev-001",
+    title: "Muay Thai",
+    daysOfWeek: [1, 3, 5],
+    startTime: "18:00:00",
+    endTime: "19:30:00",
+    startRecur: "2026-01-01",
+    backgroundColor: "#f76707",
+    borderColor: "#f76707",
+    extendedProps: { instructor: "Carlos" },
+  },
+  {
+    id: "ev-002",
+    title: "Boxeo",
+    daysOfWeek: [2, 4],
+    startTime: "20:00:00",
+    endTime: "21:30:00",
+    startRecur: "2026-01-01",
+    backgroundColor: "#228be6",
+    borderColor: "#228be6",
+    extendedProps: { instructor: "Pedro" },
+  },
+  {
+    id: "ev-003",
+    title: "Yoga",
+    daysOfWeek: [6],
+    startTime: "09:00:00",
+    endTime: "10:00:00",
+    startRecur: "2026-01-01",
+    backgroundColor: "#12b886",
+    borderColor: "#12b886",
+    extendedProps: { instructor: "Ana" },
+  },
+  {
+    id: "ev-004",
+    title: "Kick Boxing",
+    daysOfWeek: [1, 4],
+    startTime: "19:00:00",
+    endTime: "20:00:00",
+    startRecur: "2026-01-01",
+    backgroundColor: "#15aabf",
+    borderColor: "#15aabf",
+    extendedProps: { instructor: "Juan" },
+  },
+];

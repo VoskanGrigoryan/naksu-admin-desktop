@@ -9,6 +9,16 @@ pub fn run() {
             .build(),
         )?;
       }
+
+      use tauri::Manager;
+      let window = app.get_webview_window("main").expect("main window not found");
+      if let Ok(Some(monitor)) = window.current_monitor() {
+        let size = monitor.size();
+        let min_w = (size.width as f64 * 0.7) as u32;
+        let min_h = (size.height as f64 * 0.7) as u32;
+        let _ = window.set_min_size(Some(tauri::PhysicalSize::new(min_w, min_h)));
+      }
+
       Ok(())
     })
     .run(tauri::generate_context!())

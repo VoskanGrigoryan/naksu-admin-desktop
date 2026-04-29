@@ -10,7 +10,7 @@ export const classTypeEnum = z.enum([
   "yoga",
 ]);
 
-export const userPlanItemSchema = z.object({
+export const membershipItemSchema = z.object({
   classType: classTypeEnum,
 
   totalClasses: z
@@ -28,8 +28,8 @@ export const userPlanItemSchema = z.object({
     .optional(),
 });
 
-export const userPlanSchema = z.object({
-  classes: z.array(userPlanItemSchema),
+export const membershipsSchema = z.object({
+  memberships: z.array(membershipItemSchema),
 });
 
-export type UserPlanFormValues = z.infer<typeof userPlanSchema>;
+export type MembershipFormValues = z.infer<typeof membershipsSchema>;

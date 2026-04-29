@@ -1,12 +1,12 @@
-import { ActionIcon, Badge, Group, TextInput, Tooltip } from "@mantine/core";
 import {
-  IconClipboardCheck,
-  IconSearch,
-  IconX,
-  IconEye,
-  IconTrash,
-  IconCopy,
-} from "@tabler/icons-react";
+  ActionIcon,
+  Avatar,
+  Badge,
+  Group,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import { IconEye, IconTrash } from "@tabler/icons-react";
 import type { DataTableSortStatus } from "mantine-datatable";
 import type { Dispatch, SetStateAction } from "react";
 import type { User } from "../../store/usersStore";
@@ -14,249 +14,245 @@ import { getPaymentStatus } from "../../utils/helpers/getPaymentStatus";
 
 export type PaymentStatus = "paid" | "pending" | "overdue";
 
-const paymentBadgeColor: Record<PaymentStatus, string> = {
-  paid: "green.5",
-  pending: "yellow.5",
-  overdue: "red.5",
+export const paymentConfig: Record<PaymentStatus, { color: string; label: string }> = {
+  paid: { color: "green", label: "Abonado" },
+  pending: { color: "yellow", label: "Pendiente" },
+  overdue: { color: "red", label: "Vencido" },
 };
 
-const paymentLabel: Record<PaymentStatus, string> = {
-  paid: "Abonado",
-  pending: "Pendiente",
-  overdue: "Vencido",
+export const classMeta: Record<
+  string,
+  { initials: string; label: string; color: string }
+> = {
+  muay_thai: { initials: "MT", label: "Muay Thai", color: "orange" },
+  sipalki_do: { initials: "SD", label: "Sipalki Do", color: "grape" },
+  competidores: { initials: "CO", label: "Competidores", color: "red" },
+  kick_boxing: { initials: "KB", label: "Kick Boxing", color: "cyan" },
+  boxeo: { initials: "BX", label: "Boxeo", color: "blue" },
+  boxeo_comp_thai: { initials: "BCT", label: "Boxeo Comp. Thai", color: "violet" },
+  yoga: { initials: "YG", label: "Yoga", color: "teal" },
 };
+
+const avatarColors = ["blue", "teal", "violet", "orange", "grape", "indigo", "cyan"];
+
+export function getAvatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+}
+
+export function getInitials(name: string): string {
+  return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
+}
 
 interface ColumnsParams {
-  nameQuery: string;
-  setNameQuery: Dispatch<SetStateAction<string>>;
-  emailQuery: string;
-  setEmailQuery: Dispatch<SetStateAction<string>>;
-  copiedValue: string | null;
-  setCopiedValue: Dispatch<SetStateAction<string | null>>;
   navigate: (path: string) => void;
   sortStatus: DataTableSortStatus<User>;
   setSortStatus: Dispatch<SetStateAction<DataTableSortStatus<User>>>;
 }
 
-const classMeta: Record<string, { initials: string; label: string }> = {
-  muay_thai: { initials: "MT", label: "Muay Thai" },
-  sipalki_do: { initials: "SD", label: "Sipalki Do" },
-  competidores: { initials: "CO", label: "Competidores" },
-  kick_boxing: { initials: "KB", label: "Kick Boxing" },
-  boxeo: { initials: "BX", label: "Boxeo" },
-  boxeo_comp_thai: { initials: "BCT", label: "Boxeo Comp. Thai" },
-  yoga: { initials: "YG", label: "Yoga" },
-};
+function MembershipBadges({ user }: { user: User }) {
+  if (!user.memberships?.length) return <Text size="sm" c="dimmed" ta="center">—</Text>;
+  return (
+    <Group gap={4} wrap="wrap">
+      {user.memberships.map((c, i) => {
+        const meta = classMeta[c.classType];
+        return (
+          <Tooltip key={i} label={`${meta?.label ?? c.classType} · ${c.totalClasses} clases`} withArrow transitionProps={{ duration: 80 }}>
+            <Badge size="sm" radius="sm" variant="light" color={meta?.color ?? "gray"} style={{ cursor: "default" }}>
+              {meta?.initials ?? "?"}
+            </Badge>
+          </Tooltip>
+        );
+      })}
+    </Group>
+  );
+}
 
-export function getUserColumns(params: ColumnsParams) {
-  const {
-    nameQuery,
-    setNameQuery,
-    emailQuery,
-    setEmailQuery,
-    copiedValue,
-    setCopiedValue,
-    navigate,
-  } = params;
+function DisciplineBadges({ user }: { user: User }) {
+  if (!user.teachingDisciplines?.length) return <Text size="sm" c="dimmed" ta="center">—</Text>;
+  return (
+    <Group gap={4} wrap="wrap">
+      {user.teachingDisciplines.map((d) => {
+        const meta = classMeta[d];
+        return (
+          <Tooltip key={d} label={meta?.label ?? d} withArrow transitionProps={{ duration: 80 }}>
+            <Badge size="sm" radius="sm" variant="light" color={meta?.color ?? "gray"} style={{ cursor: "default" }}>
+              {meta?.initials ?? "?"}
+            </Badge>
+          </Tooltip>
+        );
+      })}
+    </Group>
+  );
+}
 
+function RowActions({ record, navigate, label }: { record: User; navigate: (p: string) => void; label: string }) {
+  return (
+    <Group gap={4} wrap="nowrap" justify="center">
+      <Tooltip label="Ver perfil" withArrow transitionProps={{ duration: 80 }}>
+        <ActionIcon size="sm" variant="subtle" color="blue" onClick={(e) => { e.stopPropagation(); navigate(`/user/${record.id}`); }}>
+          <IconEye size={15} stroke={2} />
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label={label} withArrow transitionProps={{ duration: 80 }}>
+        <ActionIcon size="sm" variant="subtle" color="red" onClick={(e) => e.stopPropagation()}>
+          <IconTrash size={15} stroke={2} />
+        </ActionIcon>
+      </Tooltip>
+    </Group>
+  );
+}
+
+export function getTrainerColumns({ navigate }: ColumnsParams) {
   return [
     {
       accessor: "name",
-      title: "Nombre",
+      title: "Entrenador",
       sortable: true,
       width: "20%",
-      filter: (
-        <TextInput
-          placeholder="Buscar nombre…"
-          leftSection={<IconSearch size={16} />}
-          rightSection={
-            <ActionIcon
-              size="sm"
-              variant="transparent"
-              onClick={() => setNameQuery("")}
-            >
-              <IconX size={14} />
-            </ActionIcon>
-          }
-          value={nameQuery}
-          onChange={(e) => setNameQuery(e.currentTarget.value)}
-        />
-      ),
-      filtering: nameQuery !== "",
       render: (record: User) => (
-        <Group justify="space-between">
-          <span>{record.name}</span>
-          <ActionIcon
-            size="sm"
-            variant="transparent"
-            color={copiedValue === record.name ? "green" : "gray.6"}
-            onClick={() => {
-              navigator.clipboard.writeText(record.name);
-              setCopiedValue(record.name);
-              setTimeout(() => setCopiedValue(null), 1500);
-            }}
-          >
-            {copiedValue === record.name ? (
-              <IconClipboardCheck size={20} />
-            ) : (
-              <IconCopy size={20} />
-            )}
-          </ActionIcon>
+        <Group gap="xs" wrap="nowrap">
+          <Avatar size={34} radius="xl" color={getAvatarColor(record.name)} variant="filled" style={{ flexShrink: 0 }}>
+            {getInitials(record.name)}
+          </Avatar>
+          <div>
+            <Text size="sm" fw={500} lineClamp={1}>{record.name}</Text>
+            <Group gap={4} mt={2}>
+              <Badge size="xs" radius="xl" variant="dot" color={record.active ? "green" : "gray"}>
+                {record.active ? "Activo" : "Inactivo"}
+              </Badge>
+              {record.role === "both" && (
+                <Badge size="xs" radius="xl" variant="light" color="violet">Entrenador / Cliente</Badge>
+              )}
+            </Group>
+          </div>
         </Group>
       ),
     },
     {
       accessor: "email",
-      title: "Correo",
+      title: "Correo electrónico",
       sortable: true,
-      width: "30%",
-      filter: (
-        <TextInput
-          placeholder="Buscar correo…"
-          leftSection={<IconSearch size={16} />}
-          rightSection={
-            <ActionIcon
-              size="sm"
-              variant="transparent"
-              onClick={() => setEmailQuery("")}
-            >
-              <IconX size={14} />
-            </ActionIcon>
-          }
-          value={emailQuery}
-          onChange={(e) => setEmailQuery(e.currentTarget.value)}
-        />
-      ),
-      filtering: emailQuery !== "",
-      render: (record: User) => (
-        <Group justify="space-between">
-          <span>{record.email}</span>
-          <ActionIcon
-            size="sm"
-            variant="transparent"
-            color={copiedValue === record.email ? "green" : "gray.6"}
-            onClick={() => {
-              navigator.clipboard.writeText(record.email);
-              setCopiedValue(record.email);
-              setTimeout(() => setCopiedValue(null), 1500);
-            }}
-          >
-            {copiedValue === record.email ? (
-              <IconClipboardCheck size={20} />
-            ) : (
-              <IconCopy size={20} />
-            )}
-          </ActionIcon>
-        </Group>
-      ),
+      width: "18%",
+      render: (record: User) => <Text size="sm" c="dimmed" lineClamp={1}>{record.email}</Text>,
     },
     {
       accessor: "phone",
       title: "Celular",
-      width: "10%",
-      render: (record: User) => record.phone ?? "-",
+      width: "9%",
+      render: (record: User) => <Text size="sm" c={record.phone ? undefined : "dimmed"}>{record.phone ?? "—"}</Text>,
+    },
+    {
+      accessor: "dni",
+      title: "DNI",
+      width: "9%",
+      render: (record: User) => <Text size="sm" c={record.dni ? undefined : "dimmed"}>{record.dni ?? "—"}</Text>,
+    },
+    {
+      accessor: "teachingDisciplines",
+      title: "Clases dadas",
+      width: "18%",
+      render: (record: User) => <DisciplineBadges user={record} />,
+    },
+    {
+      accessor: "memberships",
+      title: "Clases recibidas",
+      width: "18%",
+      render: (record: User) =>
+        record.role !== "both"
+          ? <Text size="sm" c="dimmed" ta="center">—</Text>
+          : <MembershipBadges user={record} />,
+    },
+    {
+      accessor: "actions",
+      title: "",
+      width: "4%",
+      render: (record: User) => <RowActions record={record} navigate={navigate} label="Eliminar entrenador" />,
+    },
+  ];
+}
+
+export function getUserColumns({ navigate }: ColumnsParams) {
+  return [
+    {
+      accessor: "name",
+      title: "Usuario",
+      sortable: true,
+      width: "20%",
+      render: (record: User) => (
+        <Group gap="xs" wrap="nowrap">
+          <Avatar size={34} radius="xl" color={getAvatarColor(record.name)} variant="filled" style={{ flexShrink: 0 }}>
+            {getInitials(record.name)}
+          </Avatar>
+          <div>
+            <Text size="sm" fw={500} lineClamp={1}>{record.name}</Text>
+            <Group gap={4} mt={2}>
+              <Badge size="xs" radius="xl" variant="dot" color={record.active ? "green" : "gray"}>
+                {record.active ? "Activo" : "Inactivo"}
+              </Badge>
+              {record.role === "both" && (
+                <Badge size="xs" radius="xl" variant="light" color="violet">Entrenador / Cliente</Badge>
+              )}
+            </Group>
+          </div>
+        </Group>
+      ),
+    },
+    {
+      accessor: "email",
+      title: "Correo electrónico",
+      sortable: true,
+      width: "18%",
+      render: (record: User) => <Text size="sm" c="dimmed" lineClamp={1}>{record.email}</Text>,
+    },
+    {
+      accessor: "phone",
+      title: "Celular",
+      width: "9%",
+      render: (record: User) => <Text size="sm" c={record.phone ? undefined : "dimmed"}>{record.phone ?? "—"}</Text>,
+    },
+    {
+      accessor: "dni",
+      title: "DNI",
+      width: "9%",
+      render: (record: User) => <Text size="sm" c={record.dni ? undefined : "dimmed"}>{record.dni ?? "—"}</Text>,
     },
     {
       accessor: "birthday",
       title: "Nacimiento",
       sortable: true,
-      width: "10%",
-      render: (record: User) =>
-        record.birthday?.toLocaleDateString("es-AR") ?? "-",
+      width: "9%",
+      render: (record: User) => (
+        <Text size="sm" c={record.birthday ? undefined : "dimmed"}>
+          {record.birthday?.toLocaleDateString("es-AR") ?? "—"}
+        </Text>
+      ),
       sortAccessor: (record: User) => record.birthday?.getTime() ?? 0,
+    },
+    {
+      accessor: "classes",
+      title: "Clases recibidas",
+      width: "18%",
+      render: (record: User) => <MembershipBadges user={record} />,
     },
     {
       accessor: "paymentStatus",
       title: "Pago",
-      sortable: true,
-      width: "10%",
-      textAlignment: "center",
+      width: "9%",
       render: (record: User) => {
         const status = getPaymentStatus(record);
-
-        return (
-          <Badge
-            variant="filled"
-            radius="sm"
-            fullWidth
-            size="sm"
-            color={paymentBadgeColor[status]}
-            style={{ paddingTop: 4 }}
-          >
-            {paymentLabel[status]}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessor: "classes",
-      title: "Clases",
-      width: "14%",
-      textAlignment: "center",
-      render: (record: User) => {
-        if (!record.classes?.length) return "-";
-
-        return (
-          <Group gap={4} justify="start" align="start">
-            {record.classes.map((c, index) => {
-              const meta = classMeta[c.classType];
-
-              return (
-                <Tooltip key={index} label={meta?.label ?? c.classType}>
-                  <Badge
-                    size="xs"
-                    radius="sm"
-                    variant="light"
-                    style={{ paddingTop: 4 }}
-                  >
-                    {meta?.initials ?? "?"}
-                  </Badge>
-                </Tooltip>
-              );
-            })}
-          </Group>
-        );
+        const config = paymentConfig[status];
+        return <Badge variant="dot" radius="xl" size="sm" color={config.color}>{config.label}</Badge>;
       },
     },
     {
       accessor: "actions",
-      title: "Acciones",
-      width: "6%",
-      textAlignment: "center",
-      render: (record: User) => (
-        <Group
-          gap={8}
-          wrap="nowrap"
-          justify="center"
-          style={{
-            opacity: 0.9,
-            transition: "opacity 150ms ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = "1";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = "0.9";
-          }}
-        >
-          <IconEye
-            size={20}
-            stroke={1.5}
-            style={{ cursor: "pointer" }}
-            color="var(--mantine-color-gray-6)"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/user/${record.id}`);
-            }}
-          />
-          <IconTrash
-            size={20}
-            stroke={1.5}
-            style={{ cursor: "pointer" }}
-            color="var(--mantine-color-gray-6)"
-          />
-        </Group>
-      ),
+      title: "",
+      width: "4%",
+      render: (record: User) => <RowActions record={record} navigate={navigate} label="Eliminar usuario" />,
     },
   ];
 }

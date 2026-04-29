@@ -75,7 +75,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     >
       <AppShell.Navbar
         className={styles.navbar}
-        style={{ backgroundColor: "var(--mantine-color-blue-6)" }}
+        style={{ background: "linear-gradient(to bottom, #1e3a8a, #c92a2a)" }}
       >
         <div className={styles.navbarMain}>
           <Stack justify="center" gap={0}>
@@ -111,6 +111,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
+          backgroundColor: "#f1f5f9",
         }}
       >
         {children}
