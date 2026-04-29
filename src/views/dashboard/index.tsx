@@ -26,6 +26,7 @@ import {
   IconAlertTriangle,
 } from "@tabler/icons-react";
 
+import { useComputedColorScheme } from "@mantine/core";
 import MainLayout from "../../layouts/main/MainLayout";
 import { useUsersStore } from "../../store/usersStore";
 import { useCalendarStore } from "../../store/calendarStore";
@@ -73,6 +74,11 @@ function StatCard({
 const Dashboard = () => {
   const { users, setUsers } = useUsersStore();
   const { events, setEvents } = useCalendarStore();
+  const colorScheme = useComputedColorScheme("light");
+  const rowBg = colorScheme === "dark" ? "var(--mantine-color-dark-6)" : "var(--mantine-color-gray-0)";
+  const rowBorder = colorScheme === "dark" ? "1px solid var(--mantine-color-dark-4)" : "1px solid var(--mantine-color-gray-2)";
+  const todayBg = colorScheme === "dark" ? "rgba(29, 78, 216, 0.2)" : "var(--mantine-color-blue-0)";
+  const todayBorderColor = colorScheme === "dark" ? "var(--mantine-color-blue-7)" : "var(--mantine-color-blue-2)";
 
   useEffect(() => {
     setUsers(mockUsers);
@@ -302,9 +308,9 @@ const Dashboard = () => {
                           justify="space-between"
                           p="xs"
                           style={{
-                            backgroundColor: "var(--mantine-color-gray-0)",
+                            backgroundColor: rowBg,
                             borderRadius: 8,
-                            border: "1px solid var(--mantine-color-gray-2)",
+                            border: rowBorder,
                           }}
                         >
                           <Group gap="sm">
@@ -370,9 +376,9 @@ const Dashboard = () => {
                             align="center"
                             p="xs"
                             style={{
-                              backgroundColor: isToday ? "var(--mantine-color-blue-0)" : "var(--mantine-color-gray-0)",
+                              backgroundColor: isToday ? todayBg : rowBg,
                               borderRadius: 8,
-                              border: `1px solid ${isToday ? "var(--mantine-color-blue-2)" : "var(--mantine-color-gray-2)"}`,
+                              border: `1px solid ${isToday ? todayBorderColor : (colorScheme === "dark" ? "var(--mantine-color-dark-4)" : "var(--mantine-color-gray-2)")}`,
                             }}
                           >
                             <Group gap="sm" align="center">

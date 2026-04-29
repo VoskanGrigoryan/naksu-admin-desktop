@@ -34,7 +34,6 @@ import "dayjs/locale/es";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <MantineProvider
-      forceColorScheme="light"
       defaultColorScheme="light"
       theme={{
         ...theme,

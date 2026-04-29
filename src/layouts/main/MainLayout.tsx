@@ -1,4 +1,4 @@
-import { AppShell, Stack, Tooltip, UnstyledButton } from "@mantine/core";
+import { AppShell, Stack, Tooltip, UnstyledButton, useComputedColorScheme, useMantineColorScheme } from "@mantine/core";
 import React from "react";
 import {
   IconApple,
@@ -6,6 +6,8 @@ import {
   IconCalendar,
   IconHome2,
   IconLogout,
+  IconMoon,
+  IconSun,
   IconUser,
 } from "@tabler/icons-react";
 import styles from "./MainLayout.module.css";
@@ -42,6 +44,8 @@ function NavbarLink({ icon: Icon, label, active, onClick }: NavbarLinkProps) {
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
+  const { toggleColorScheme } = useMantineColorScheme();
+  const colorScheme = useComputedColorScheme("light");
 
   const active = useUIStore((s) => s.selectedNavbarIndex);
   const setActive = useUIStore((s) => s.setSelectedNavbarIndex);
@@ -83,19 +87,16 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           </Stack>
         </div>
 
-        <Stack justify="center">
-          <Tooltip
-            label="Cerrar sesión"
-            position="right"
-            transitionProps={{ duration: 0 }}
-            style={{ paddingTop: 8 }}
-          >
+        <Stack justify="center" gap={0}>
+          <Tooltip label={colorScheme === "dark" ? "Modo claro" : "Modo oscuro"} position="right" transitionProps={{ duration: 0 }} style={{ paddingTop: 8 }}>
+            <UnstyledButton style={{ padding: "var(--mantine-spacing-xs)", color: "white" }} onClick={toggleColorScheme} className={styles.link}>
+              {colorScheme === "dark" ? <IconSun size={24} stroke={2} /> : <IconMoon size={24} stroke={2} />}
+            </UnstyledButton>
+          </Tooltip>
+          <Tooltip label="Cerrar sesión" position="right" transitionProps={{ duration: 0 }} style={{ paddingTop: 8 }}>
             <UnstyledButton
               style={{ padding: "var(--mantine-spacing-xs)", color: "white" }}
-              onClick={() => {
-                setActive(0);
-                navigate("/auth");
-              }}
+              onClick={() => { setActive(0); navigate("/auth"); }}
               className={styles.link}
             >
               <IconLogout size={24} stroke={2} />
@@ -111,7 +112,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
-          backgroundColor: "#f1f5f9",
+          backgroundColor: colorScheme === "dark" ? "var(--mantine-color-dark-8)" : "#f1f5f9",
         }}
       >
         {children}

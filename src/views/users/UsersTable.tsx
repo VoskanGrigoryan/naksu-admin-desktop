@@ -5,6 +5,7 @@ import {
   Paper,
   SegmentedControl,
   TextInput,
+  useComputedColorScheme,
 } from "@mantine/core";
 import { DataTable, type DataTableSortStatus } from "mantine-datatable";
 import sortBy from "lodash/sortBy";
@@ -13,6 +14,7 @@ import { useDebouncedValue } from "@mantine/hooks";
 import { useNavigate } from "react-router-dom";
 import { useUsersStore } from "../../store/usersStore";
 import { IconSearch, IconX } from "@tabler/icons-react";
+import "./Users.module.css";
 import { getUserColumns, getTrainerColumns } from "./columns";
 import { getPaymentStatus } from "../../utils/helpers/getPaymentStatus";
 import type { PaymentStatus } from "./columns";
@@ -28,6 +30,7 @@ export default function UsersTable({
 }) {
   const navigate = useNavigate();
   const { users } = useUsersStore();
+  const colorScheme = useComputedColorScheme("light");
 
   type User = (typeof users)[number];
 
@@ -130,10 +133,9 @@ export default function UsersTable({
           height="calc(100vh - 230px)"
           style={{ borderRadius: "var(--mantine-radius-md)" }}
           styles={{
-            table: { backgroundColor: "white" },
             header: {
-              backgroundColor: "var(--mantine-color-gray-1)",
-              borderBottom: "2px solid var(--mantine-color-gray-3)",
+              backgroundColor: colorScheme === "dark" ? "var(--mantine-color-dark-6)" : "var(--mantine-color-gray-1)",
+              borderBottom: `2px solid ${colorScheme === "dark" ? "var(--mantine-color-dark-4)" : "var(--mantine-color-gray-3)"}`,
             },
           }}
         />
