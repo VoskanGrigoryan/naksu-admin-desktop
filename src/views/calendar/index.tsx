@@ -5,18 +5,13 @@ import CrearClaseForm from "./CrearClaseForm";
 import HeaderControls from "./Header";
 import type { CalendarEvent } from "../../types/calendar";
 import { useCalendarStore } from "../../store/calendarStore";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Calendar from "./Calendar";
-import { mockCalendarEvents } from "../../mocks/calendarData";
 
 const CalendarView = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const addEvent = useCalendarStore((s) => s.addEvent);
-  const { events, setEvents } = useCalendarStore();
-
-  useEffect(() => {
-    if (events.length === 0) setEvents(mockCalendarEvents);
-  }, []);
+  const events = useCalendarStore((s) => s.events);
 
   const [filters, setFilters] = useState({
     instructors: [] as string[],

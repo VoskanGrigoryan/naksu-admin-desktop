@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   Avatar,
@@ -29,7 +29,6 @@ import { notifications } from "@mantine/notifications";
 import type { UseFormReturn } from "react-hook-form";
 
 import MainLayout from "../../layouts/main/MainLayout";
-import { mockUsers } from "../../mocks/userTableData";
 import UserInfoForm from "./UserInfoForm";
 import UserPlanForm from "./UserPlanForm";
 import EnrollmentsSection from "./EnrollmentsSection";
@@ -50,7 +49,7 @@ const disabledInputStyles = {
 };
 
 const UserDetail = () => {
-  const { users, updateUser, setUsers } = useUsersStore();
+  const { users, updateUser } = useUsersStore();
   const { id } = useParams();
 
   const userInfoFormRef = useRef<UseFormReturn<UserInfoFormValues>>(null);
@@ -59,10 +58,6 @@ const UserDetail = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editRole, setEditRole] = useState<UserRole>("client");
   const [editDisciplines, setEditDisciplines] = useState<ClassType[]>([]);
-
-  useEffect(() => {
-    setUsers(mockUsers);
-  }, []);
 
   const user = users.find((u) => u.id === id);
   if (!user) return <div>User not found</div>;

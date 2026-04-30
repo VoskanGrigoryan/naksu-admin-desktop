@@ -11,13 +11,12 @@ import {
 } from "@mantine/core";
 import { DateInput, TimePicker } from "@mantine/dates";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
-import { useEffect } from "react";
+import { useMemo } from "react";
 import type { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { CalendarEvent } from "../../types/calendar";
 import { useCalendarStore } from "../../store/calendarStore";
 import { useUsersStore } from "../../store/usersStore";
-import { mockUsers } from "../../mocks/userTableData";
 import { eventSchema } from "../../schemas/eventSchema";
 import { basicColors, daysOfWeek } from "../../utils/constants/calendar";
 import {
@@ -45,20 +44,19 @@ const defaultFormValues: FormValues = {
 
 const CrearClaseForm = ({ onSubmit, initialValues }: Props) => {
   const storeEvents = useCalendarStore((s) => s.events);
-  const { users, setUsers } = useUsersStore();
+  const users = useUsersStore((s) => s.users);
 
-  useEffect(() => {
-    if (users.length === 0) setUsers(mockUsers);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const activitySuggestions = Array.from(
-    new Set(storeEvents.map((e) => e.title).filter(Boolean)),
+  const activitySuggestions = useMemo(
+    () => Array.from(new Set(storeEvents.map((e) => e.title).filter(Boolean))),
+    [storeEvents],
   );
 
-  const trainerOptions = users
-    .filter((u) => u.role === "trainer" || u.role === "both")
-    .map((u) => ({ value: u.name, label: u.name }));
+  const trainerOptions = useMemo(
+    () => users
+      .filter((u) => u.role === "trainer" || u.role === "both")
+      .map((u) => ({ value: u.name, label: u.name })),
+    [users],
+  );
 
   const {
     handleSubmit,

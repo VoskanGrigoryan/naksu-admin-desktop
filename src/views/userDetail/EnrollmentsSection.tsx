@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useMemo } from "react";
 import {
   ActionIcon,
   Box,
@@ -14,7 +14,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconMoodEmpty, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useCalendarStore } from "../../store/calendarStore";
 import type { Enrollment } from "../../store/usersStore";
-import { mockCalendarEvents } from "../../mocks/calendarData";
 import CustomButton from "../../components/reusable/Button";
 import { Title } from "@mantine/core";
 
@@ -41,26 +40,22 @@ const EnrollmentsSection = ({
   onAdd,
   onRemove,
 }: Props) => {
-  const { events, setEvents } = useCalendarStore();
+  const events = useCalendarStore((s) => s.events);
   const [modalOpened, { open, close }] = useDisclosure(false);
 
-  useEffect(() => {
-    if (events.length === 0) setEvents(mockCalendarEvents);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const enrolledEventIds = new Set(enrollments.map((e) => e.eventId));
-
-  const enrolledRows = enrollments
-    .map((enrollment) => ({
-      enrollment,
-      event: events.find((e) => e.id === enrollment.eventId),
-    }))
-    .filter((x): x is { enrollment: Enrollment; event: NonNullable<typeof x.event> } =>
-      x.event !== undefined,
-    );
-
-  const availableEvents = events.filter((e) => !enrolledEventIds.has(e.id));
+  const { enrolledRows, availableEvents } = useMemo(() => {
+    const enrolledEventIds = new Set(enrollments.map((e) => e.eventId));
+    const enrolledRows = enrollments
+      .map((enrollment) => ({
+        enrollment,
+        event: events.find((e) => e.id === enrollment.eventId),
+      }))
+      .filter((x): x is { enrollment: Enrollment; event: NonNullable<typeof x.event> } =>
+        x.event !== undefined,
+      );
+    const availableEvents = events.filter((e) => !enrolledEventIds.has(e.id));
+    return { enrolledRows, availableEvents };
+  }, [enrollments, events]);
 
   return (
     <>

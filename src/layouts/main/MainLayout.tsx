@@ -18,10 +18,11 @@ interface NavbarLinkProps {
   icon: typeof IconHome2;
   label: string;
   active?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
 }
 
-function NavbarLink({ icon: Icon, label, active, onClick }: NavbarLinkProps) {
+function NavbarLink({ icon: Icon, label, active, disabled, onClick }: NavbarLinkProps) {
   return (
     <Tooltip
       label={label}
@@ -31,10 +32,11 @@ function NavbarLink({ icon: Icon, label, active, onClick }: NavbarLinkProps) {
     >
       <UnstyledButton
         style={{ padding: "var(--mantine-spacing-xs)" }}
-        onClick={onClick}
-        className={styles.link}
+        onClick={disabled ? undefined : onClick}
+        className={`${styles.link} ${disabled ? styles.linkDisabled : ""}`}
         data-active={active || undefined}
         aria-label={label}
+        aria-disabled={disabled || undefined}
       >
         <Icon size={24} stroke={2} />
       </UnstyledButton>
@@ -51,11 +53,11 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const setActive = useUIStore((s) => s.setSelectedNavbarIndex);
 
   const mockdata = [
-    { icon: IconHome2, label: "Panel principal", path: "/" },
-    { icon: IconUser, label: "Usuarios", path: "/users" },
-    { icon: IconCalendar, label: "Clases", path: "/classes" },
-    { icon: IconBarbell, label: "Rutinas", path: "/routines" },
-    { icon: IconApple, label: "Dietas", path: "/diets" },
+    { icon: IconHome2, label: "Panel principal", path: "/", disabled: false },
+    { icon: IconUser, label: "Usuarios", path: "/users", disabled: false },
+    { icon: IconCalendar, label: "Clases", path: "/classes", disabled: false },
+    { icon: IconBarbell, label: "Rutinas", path: "/routines", disabled: true },
+    { icon: IconApple, label: "Dietas", path: "/diets", disabled: true },
   ];
 
   const links = mockdata.map((link, index) => (

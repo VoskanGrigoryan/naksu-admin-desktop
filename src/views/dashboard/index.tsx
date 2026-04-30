@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useMemo } from "react";
 import {
   Badge,
   Box,
@@ -30,8 +30,6 @@ import { useComputedColorScheme } from "@mantine/core";
 import MainLayout from "../../layouts/main/MainLayout";
 import { useUsersStore } from "../../store/usersStore";
 import { useCalendarStore } from "../../store/calendarStore";
-import { mockUsers } from "../../mocks/userTableData";
-import { mockCalendarEvents } from "../../mocks/calendarData";
 import { getPaymentStatus } from "../../utils/helpers/getPaymentStatus";
 import { classMeta, getAvatarColor, getInitials, paymentConfig } from "../users/columns";
 import { Avatar } from "@mantine/core";
@@ -72,77 +70,91 @@ function StatCard({
 }
 
 const Dashboard = () => {
-  const { users, setUsers } = useUsersStore();
-  const { events, setEvents } = useCalendarStore();
+  const users = useUsersStore((s) => s.users);
+  const events = useCalendarStore((s) => s.events);
   const colorScheme = useComputedColorScheme("light");
-  const rowBg = colorScheme === "dark" ? "var(--mantine-color-dark-6)" : "var(--mantine-color-gray-0)";
-  const rowBorder = colorScheme === "dark" ? "1px solid var(--mantine-color-dark-4)" : "1px solid var(--mantine-color-gray-2)";
-  const todayBg = colorScheme === "dark" ? "rgba(29, 78, 216, 0.2)" : "var(--mantine-color-blue-0)";
-  const todayBorderColor = colorScheme === "dark" ? "var(--mantine-color-blue-7)" : "var(--mantine-color-blue-2)";
 
-  useEffect(() => {
-    setUsers(mockUsers);
-    setEvents(mockCalendarEvents);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const rowStyles = useMemo(() => ({
+    rowBg: colorScheme === "dark" ? "var(--mantine-color-dark-6)" : "var(--mantine-color-gray-0)",
+    rowBorder: colorScheme === "dark" ? "1px solid var(--mantine-color-dark-4)" : "1px solid var(--mantine-color-gray-2)",
+    todayBg: colorScheme === "dark" ? "rgba(29, 78, 216, 0.2)" : "var(--mantine-color-blue-0)",
+    todayBorderColor: colorScheme === "dark" ? "var(--mantine-color-blue-7)" : "var(--mantine-color-blue-2)",
+  }), [colorScheme]);
 
-  // Paying users = clients + both (trainers don't pay)
-  const payingUsers = users.filter((u) => (u.role ?? "client") !== "trainer");
-  const trainerCount = users.filter((u) => u.role === "trainer" || u.role === "both").length;
+  const userStats = useMemo(() => {
+    const payingUsers = users.filter((u) => (u.role ?? "client") !== "trainer");
+    const trainerCount = users.filter((u) => u.role === "trainer" || u.role === "both").length;
+    const activeCount = payingUsers.filter((u) => u.active).length;
+    const totalClients = payingUsers.length;
 
-  const activeCount = payingUsers.filter((u) => u.active).length;
-  const totalClients = payingUsers.length;
+    const totalCollected = payingUsers.reduce(
+      (acc, u) => acc + u.memberships.reduce((a, m) => a + m.amountPaid, 0),
+      0,
+    );
+    const totalDue = payingUsers.reduce(
+      (acc, u) => acc + u.memberships.reduce((a, m) => a + (m.pricePerClass ?? 0) * m.totalClasses, 0),
+      0,
+    );
+    const collectedPct = totalDue > 0 ? Math.round((totalCollected / totalDue) * 100) : 0;
 
-  // Revenue
-  const totalCollected = payingUsers.reduce(
-    (acc, u) => acc + u.memberships.reduce((a, m) => a + m.amountPaid, 0),
-    0,
-  );
-  const totalDue = payingUsers.reduce(
-    (acc, u) =>
-      acc + u.memberships.reduce((a, m) => a + (m.pricePerClass ?? 0) * m.totalClasses, 0),
-    0,
-  );
-  const collectedPct = totalDue > 0 ? Math.round((totalCollected / totalDue) * 100) : 0;
+    const paidCount = payingUsers.filter((u) => getPaymentStatus(u) === "paid").length;
+    const pendingCount = payingUsers.filter((u) => getPaymentStatus(u) === "pending").length;
+    const overdueCount = payingUsers.filter((u) => getPaymentStatus(u) === "overdue").length;
+    const paidPct = totalClients > 0 ? (paidCount / totalClients) * 100 : 0;
+    const pendingPct = totalClients > 0 ? (pendingCount / totalClients) * 100 : 0;
+    const overduePct = totalClients > 0 ? (overdueCount / totalClients) * 100 : 0;
 
-  // Payment status breakdown
-  const paidCount = payingUsers.filter((u) => getPaymentStatus(u) === "paid").length;
-  const pendingCount = payingUsers.filter((u) => getPaymentStatus(u) === "pending").length;
-  const overdueCount = payingUsers.filter((u) => getPaymentStatus(u) === "overdue").length;
-  const paidPct = totalClients > 0 ? (paidCount / totalClients) * 100 : 0;
-  const pendingPct = totalClients > 0 ? (pendingCount / totalClients) * 100 : 0;
-  const overduePct = totalClients > 0 ? (overdueCount / totalClients) * 100 : 0;
-
-  // Discipline breakdown (by number of enrolled clients)
-  const disciplineMap: Record<string, number> = {};
-  payingUsers.forEach((u) => {
-    u.memberships.forEach((m) => {
-      disciplineMap[m.classType] = (disciplineMap[m.classType] ?? 0) + 1;
+    const disciplineMap: Record<string, number> = {};
+    payingUsers.forEach((u) => {
+      u.memberships.forEach((m) => {
+        disciplineMap[m.classType] = (disciplineMap[m.classType] ?? 0) + 1;
+      });
     });
-  });
-  const sortedDisciplines = Object.entries(disciplineMap).sort((a, b) => b[1] - a[1]);
-  const maxCount = sortedDisciplines[0]?.[1] ?? 1;
-  const topDiscipline = sortedDisciplines[0];
+    const sortedDisciplines = Object.entries(disciplineMap).sort((a, b) => b[1] - a[1]);
+    const maxCount = sortedDisciplines[0]?.[1] ?? 1;
+    const topDiscipline = sortedDisciplines[0];
 
-  // This week's classes — sorted starting from today
-  const todayDow = new Date().getDay();
-  const weekClasses = events
-    .flatMap((e) => e.daysOfWeek.map((d) => ({ event: e, dow: d })))
-    .sort((a, b) => {
-      const aDiff = (a.dow - todayDow + 7) % 7;
-      const bDiff = (b.dow - todayDow + 7) % 7;
-      return aDiff !== bDiff ? aDiff - bDiff : a.event.startTime.localeCompare(b.event.startTime);
-    });
+    const attentionUsers = payingUsers
+      .filter((u) => getPaymentStatus(u) !== "paid")
+      .sort((a, b) => {
+        const order = { overdue: 0, pending: 1, paid: 2 } as const;
+        return order[getPaymentStatus(a)] - order[getPaymentStatus(b)];
+      });
 
-  const classesThisWeek = events.reduce((acc, e) => acc + e.daysOfWeek.length, 0);
+    return {
+      payingUsers, trainerCount, activeCount, totalClients,
+      totalCollected, totalDue, collectedPct,
+      paidCount, pendingCount, overdueCount,
+      paidPct, pendingPct, overduePct,
+      sortedDisciplines, maxCount, topDiscipline,
+      attentionUsers,
+    };
+  }, [users]);
 
-  // Attention needed: non-paid paying users
-  const attentionUsers = payingUsers
-    .filter((u) => getPaymentStatus(u) !== "paid")
-    .sort((a, b) => {
-      const order = { overdue: 0, pending: 1, paid: 2 } as const;
-      return order[getPaymentStatus(a)] - order[getPaymentStatus(b)];
-    });
+  const calendarStats = useMemo(() => {
+    const todayDow = new Date().getDay();
+    const weekClasses = events
+      .flatMap((e) => e.daysOfWeek.map((d) => ({ event: e, dow: d })))
+      .sort((a, b) => {
+        const aDiff = (a.dow - todayDow + 7) % 7;
+        const bDiff = (b.dow - todayDow + 7) % 7;
+        return aDiff !== bDiff ? aDiff - bDiff : a.event.startTime.localeCompare(b.event.startTime);
+      });
+    const classesThisWeek = events.reduce((acc, e) => acc + e.daysOfWeek.length, 0);
+    return { todayDow, weekClasses, classesThisWeek };
+  }, [events]);
+
+  const {
+    trainerCount, activeCount, totalClients,
+    totalCollected, totalDue, collectedPct,
+    paidCount, pendingCount, overdueCount,
+    paidPct, pendingPct, overduePct,
+    sortedDisciplines, maxCount, topDiscipline,
+    attentionUsers,
+  } = userStats;
+
+  const { todayDow, weekClasses, classesThisWeek } = calendarStats;
+  const { rowBg, rowBorder, todayBg, todayBorderColor } = rowStyles;
 
   return (
     <MainLayout>
