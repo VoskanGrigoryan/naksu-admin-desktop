@@ -56,8 +56,8 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     { icon: IconHome2, label: "Panel principal", path: "/", disabled: false },
     { icon: IconUser, label: "Usuarios", path: "/users", disabled: false },
     { icon: IconCalendar, label: "Clases", path: "/classes", disabled: false },
-    { icon: IconBarbell, label: "Rutinas", path: "/routines", disabled: true },
-    { icon: IconApple, label: "Dietas", path: "/diets", disabled: true },
+    { icon: IconBarbell, label: "Rutinas", path: "/routines", disabled: false },
+    { icon: IconApple, label: "Dietas", path: "/diets", disabled: false },
   ];
 
   const links = mockdata.map((link, index) => (

@@ -14,6 +14,7 @@ type CustomButtonProps = Omit<ButtonProps, "onClick"> & {
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
   withProgress?: boolean;
   progressDuration?: number;
+  type?: "button" | "submit" | "reset";
 };
 
 const CustomButton = ({

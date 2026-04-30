@@ -3,6 +3,7 @@ import {
   Button,
   Group,
   MultiSelect,
+  NumberInput,
   Select,
   Stack,
   Text,
@@ -40,6 +41,7 @@ const defaultFormValues: FormValues = {
   startDate: new Date(),
   endDate: null,
   color: DEFAULT_THEME.colors.blue[6],
+  maxCapacity: null,
 };
 
 const CrearClaseForm = ({ onSubmit, initialValues }: Props) => {
@@ -52,16 +54,16 @@ const CrearClaseForm = ({ onSubmit, initialValues }: Props) => {
   );
 
   const trainerOptions = useMemo(
-    () => users
-      .filter((u) => u.role === "trainer" || u.role === "both")
-      .map((u) => ({ value: u.name, label: u.name })),
+    () =>
+      users
+        .filter((u) => u.role === "trainer" || u.role === "both")
+        .map((u) => ({ value: u.name, label: u.name })),
     [users],
   );
 
   const {
     handleSubmit,
     control,
-    reset,
     formState: { errors },
   } = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,12 +72,6 @@ const CrearClaseForm = ({ onSubmit, initialValues }: Props) => {
       ? mapEventToFormValues(initialValues)
       : defaultFormValues,
   });
-
-  useEffect(() => {
-    if (initialValues) {
-      reset(mapEventToFormValues(initialValues));
-    }
-  }, [initialValues, reset]);
 
   const submit: SubmitHandler<FormValues> = (values) => {
     onSubmit(mapFormToEvent(values, initialValues?.id));
@@ -201,23 +197,40 @@ const CrearClaseForm = ({ onSubmit, initialValues }: Props) => {
           />
         </Group>
 
-        <Controller
-          name="color"
-          control={control}
-          render={({ field }) => (
-            <ColorInput
-              label="Color de la clase"
-              disallowInput
-              withPicker={false}
-              value={field.value}
-              onChange={field.onChange}
-              swatches={basicColors.map(
-                (color) => DEFAULT_THEME.colors[color][5],
-              )}
-              error={errors.color?.message}
-            />
-          )}
-        />
+        <Group grow align="flex-end">
+          <Controller
+            name="color"
+            control={control}
+            render={({ field }) => (
+              <ColorInput
+                label="Color de la clase"
+                disallowInput
+                withPicker={false}
+                value={field.value}
+                onChange={field.onChange}
+                swatches={basicColors.map((color) => DEFAULT_THEME.colors[color][5])}
+                error={errors.color?.message}
+              />
+            )}
+          />
+
+          <Controller
+            name="maxCapacity"
+            control={control}
+            render={({ field }) => (
+              <NumberInput
+                label="Capacidad máxima"
+                placeholder="Sin límite"
+                min={1}
+                allowNegative={false}
+                allowDecimal={false}
+                value={field.value ?? ""}
+                onChange={(v) => field.onChange(v === "" ? null : Number(v))}
+                error={errors.maxCapacity?.message}
+              />
+            )}
+          />
+        </Group>
 
         <Button type="submit">
           {initialValues ? "Guardar cambios" : "Crear clase"}

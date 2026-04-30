@@ -1,5 +1,4 @@
 import { Stack, Box, Tabs } from "@mantine/core";
-import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { IconUser, IconBarbell } from "@tabler/icons-react";
 import MainLayout from "../../layouts/main/MainLayout";
@@ -31,6 +30,7 @@ const Users = () => {
       lastActive: null,
       role: values.role,
       teachingDisciplines: values.teachingDisciplines,
+      paymentHistory: [],
     };
     addUser(newUser);
   };

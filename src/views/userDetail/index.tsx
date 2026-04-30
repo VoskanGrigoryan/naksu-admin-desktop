@@ -30,6 +30,7 @@ import type { UseFormReturn } from "react-hook-form";
 
 import MainLayout from "../../layouts/main/MainLayout";
 import UserInfoForm from "./UserInfoForm";
+import PaymentHistorySection from "./PaymentHistorySection";
 import UserPlanForm from "./UserPlanForm";
 import EnrollmentsSection from "./EnrollmentsSection";
 import CustomButton from "../../components/reusable/Button";
@@ -324,13 +325,18 @@ const UserDetail = () => {
       )}
 
       {/* Enrollments section */}
-      <div style={{ marginTop: 16, marginBottom: 24 }}>
+      <div style={{ marginTop: 16 }}>
         <EnrollmentsSection
           enrollments={user.enrollments ?? []}
           isEditing={isEditing}
           onAdd={handleAddEnrollment}
           onRemove={handleRemoveEnrollment}
         />
+      </div>
+
+      {/* Payment history */}
+      <div style={{ marginTop: 16, marginBottom: 24 }}>
+        <PaymentHistorySection paymentHistory={user.paymentHistory ?? []} />
       </div>
       </ScrollArea>
     </MainLayout>

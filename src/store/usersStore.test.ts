@@ -11,6 +11,7 @@ function makeUser(overrides: Partial<User> = {}): User {
     birthday: null,
     memberships: [],
     enrollments: [],
+    paymentHistory: [],
     active: true,
     lastActive: null,
     role: "client",

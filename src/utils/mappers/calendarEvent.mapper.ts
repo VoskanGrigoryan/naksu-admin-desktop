@@ -14,6 +14,7 @@ export const mapEventToFormValues = (event: CalendarEvent): FormValues => ({
   startDate: new Date(event.startRecur),
   endDate: event.endRecur ? new Date(event.endRecur) : null,
   color: event.backgroundColor,
+  maxCapacity: event.maxCapacity ?? null,
 });
 
 export const mapFormToEvent = (values: FormValues, id?: string): CalendarEvent => ({
@@ -26,6 +27,7 @@ export const mapFormToEvent = (values: FormValues, id?: string): CalendarEvent =
   endRecur: values.endDate ? formatDate(values.endDate) : undefined,
   backgroundColor: values.color,
   borderColor: values.color,
+  maxCapacity: values.maxCapacity ?? undefined,
   extendedProps: {
     instructor: values.instructor,
   },

@@ -9,11 +9,30 @@ export type ClassType =
   | "boxeo_comp_thai"
   | "yoga";
 
+export type MembershipType = "monthly" | "class_pack";
+export type PaymentMethod = "cash" | "transfer" | "card";
+
+export type PaymentRecord = {
+  id: string;
+  date: Date;
+  amount: number;
+  method: PaymentMethod;
+  classType?: ClassType;
+  note?: string;
+};
+
 export type Membership = {
   classType: ClassType;
-  totalClasses: number;
+  membershipType: MembershipType;
+  startDate: Date;
+  endDate: Date;
   amountPaid: number;
+  // Class pack
+  totalClasses: number;
+  classesUsed: number;
   pricePerClass?: number;
+  // Monthly
+  monthlyPrice?: number;
 };
 
 export type Enrollment = {
@@ -32,6 +51,7 @@ export type User = {
   birthday: Date | null;
   memberships: Membership[];
   enrollments: Enrollment[];
+  paymentHistory: PaymentRecord[];
   active: boolean;
   lastActive: Date | null;
   role: UserRole;
@@ -43,6 +63,9 @@ type UsersState = {
   setUsers: (users: User[]) => void;
   addUser: (user: User) => void;
   updateUser: (id: string, data: Partial<User>) => void;
+  incrementClassesUsed: (userId: string, classType: ClassType) => void;
+  decrementClassesUsed: (userId: string, classType: ClassType) => void;
+  addPaymentRecord: (userId: string, record: PaymentRecord) => void;
 };
 
 export const useUsersStore = create<UsersState>((set) => ({
@@ -51,8 +74,42 @@ export const useUsersStore = create<UsersState>((set) => ({
   addUser: (user) => set((state) => ({ users: [...state.users, user] })),
   updateUser: (id, data) =>
     set((state) => ({
+      users: state.users.map((u) => (u.id === id ? { ...u, ...data } : u)),
+    })),
+  incrementClassesUsed: (userId, classType) =>
+    set((state) => ({
+      users: state.users.map((u) => {
+        if (u.id !== userId) return u;
+        return {
+          ...u,
+          memberships: u.memberships.map((m) =>
+            m.classType === classType
+              ? { ...m, classesUsed: m.classesUsed + 1 }
+              : m,
+          ),
+        };
+      }),
+    })),
+  decrementClassesUsed: (userId, classType) =>
+    set((state) => ({
+      users: state.users.map((u) => {
+        if (u.id !== userId) return u;
+        return {
+          ...u,
+          memberships: u.memberships.map((m) =>
+            m.classType === classType
+              ? { ...m, classesUsed: Math.max(0, m.classesUsed - 1) }
+              : m,
+          ),
+        };
+      }),
+    })),
+  addPaymentRecord: (userId, record) =>
+    set((state) => ({
       users: state.users.map((u) =>
-        u.id === id ? { ...u, ...data } : u
+        u.id === userId
+          ? { ...u, paymentHistory: [record, ...u.paymentHistory] }
+          : u,
       ),
     })),
 }));

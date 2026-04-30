@@ -10,7 +10,7 @@ Desktop back-office application built with Tauri + React + TypeScript + Mantine 
 - **React 18** — UI
 - **TypeScript** — strict typing throughout
 - **Mantine 8** — component library (core, dates, hooks, modals, notifications)
-- **Zustand** — global state (users store, calendar store, UI store)
+- **Zustand** — global state (users, calendar, occurrence, UI stores)
 - **React Hook Form + Zod** — form handling and validation
 - **FullCalendar** — weekly class schedule view
 - **React Router** — client-side routing
@@ -24,8 +24,10 @@ Desktop back-office application built with Tauri + React + TypeScript + Mantine 
 - KPI cards: active clients, revenue collected vs due, top discipline, classes this week
 - Discipline breakdown bar chart (clients per class type)
 - Payment status ring (paid / pending / overdue)
-- Attention list: clients with unpaid or overdue memberships, sorted by urgency
-- Weekly class schedule starting from today
+- **Expiry alert banner**: highlights memberships expiring within 7 days
+- **Attention list**: clients with unpaid or overdue memberships, with temporal context ("Venció hace Xd" / "Vence en Xd"), sorted by urgency
+- **Quick Pay modal**: mark a payment directly from the dashboard (amount, method, discipline, optional note) without navigating to user detail
+- Weekly class schedule with enrolled count vs capacity badges
 
 ### Users (`/users`)
 - Tabbed view: Clients / Trainers
@@ -36,22 +38,29 @@ Desktop back-office application built with Tauri + React + TypeScript + Mantine 
 ### User Detail (`/user/:id`)
 - Full profile card with avatar, contact info, active status toggle
 - Edit mode: inline form for personal info, role, teaching disciplines
-- Memberships section: class type, total classes, amount paid, price per class — add/edit/remove
-- Enrollments section: which recurring classes the user is enrolled in, add/remove with modal picker
+- **Memberships section**: type badge (Mensual / Pack), date range, classes-used progress bar, amount paid vs due — add/edit/remove per membership
+- **Enrollments section**: which recurring classes the user is enrolled in, add/remove with modal picker
+- **Payment History section**: chronological log of all payments with method badge, discipline badge, amount, and optional note
 
 ### Calendar / Classes (`/classes`)
 - Weekly calendar view (FullCalendar) showing all recurring class schedules
 - Filter by instructor or activity
-- Create class modal: activity name, instructor, start/end time, days of week, date range, color
-- Edit existing class (drag to move, click to edit)
-- Delete class
+- **Event badges**: shows enrolled count / capacity on each event tile, dimmed style for cancelled occurrences
+- Create class modal: activity, instructor, start/end time, days of week, date range, color, max capacity
+- Edit existing class
+- **Attendance modal**: per-date check-in list of enrolled members with checkboxes, walk-in support, capacity warning badge
+- **Occurrence management**: cancel a single date of a recurring class (without deleting the entire series), restore it if cancelled
+- Delete entire recurring event
 
 ### Auth (`/auth`)
 - Login screen with email/password and Google auth option
 - Auth layout separate from main app layout
 
-### Routines & Diets (`/routines`, `/diets`)
-- Views exist but are currently disabled — nav buttons visible but unclickable (opacity + pointer-events: none)
+### Routines (`/routines`)
+- "En desarrollo" view with 4 planned feature cards (assignment, weekly progression, tracking, exercise library)
+
+### Diets (`/diets`)
+- "En desarrollo" view with 4 planned feature cards (individual plans, diet templates, weight tracking, food bank)
 
 ---
 
@@ -64,6 +73,7 @@ role: "client" | "trainer" | "both",
 teachingDisciplines: ClassType[],
 memberships: Membership[],
 enrollments: Enrollment[],
+paymentHistory: PaymentRecord[],
 active: boolean,
 lastActive: Date | null
 ```
@@ -71,18 +81,44 @@ lastActive: Date | null
 ### Membership
 ```
 classType: ClassType,
+membershipType: "monthly" | "class_pack",
+startDate: Date,
+endDate: Date,
 totalClasses: number,
+classesUsed: number,
 amountPaid: number,
-pricePerClass?: number
+pricePerClass?: number,
+monthlyPrice?: number
+```
+
+### PaymentRecord
+```
+id: string,
+date: string,
+amount: number,
+method: "cash" | "transfer" | "card",
+classType?: ClassType,
+note?: string
+```
+
+### ClassOccurrence
+```
+id: string,
+eventId: string,
+date: string,        // YYYY-MM-DD
+attendees: string[], // user ids
+cancelled: boolean
 ```
 
 ### CalendarEvent (recurring)
 ```
-id, title, instructor,
+id?, title, classType?,
+instructor,
 daysOfWeek: number[],
 startTime, endTime,
-startDate, endDate,
-backgroundColor
+startRecur, endRecur?,
+backgroundColor, borderColor,
+maxCapacity?: number
 ```
 
 ### Enrollment
@@ -95,20 +131,39 @@ id, eventId
 
 ---
 
-## Performance Work
+## Business Logic
 
-- **Mock data centralized**: stores seeded once at app startup via `getState()` before React renders — removed 6 separate per-component `useEffect` loaders
-- **Artificial delays removed**: eliminated two 800ms `setTimeout` fake loading screens from the Users view
-- **Route lazy loading**: all views loaded with `React.lazy()` + `Suspense` — FullCalendar (~500KB) only loads when navigating to `/classes`
-- **Background prefetching**: all route chunks prefetched after initial render so navigation feels instant
-- **`useMemo` on Dashboard**: all derived state (user stats, calendar stats, color scheme values) memoized — dashboard no longer recomputes 15+ values on every render
-- **Zustand selectors**: components subscribe to specific slices of state instead of entire stores
-- **`useMemo` in CrearClaseForm**: `activitySuggestions` and `trainerOptions` stabilized
-- **EnrollmentsSection**: O(n) lookups consolidated into a single memoized pass
+### Payment status
+- `paid`: amountPaid >= total due across all memberships
+- `pending`: partially paid
+- `overdue`: nothing paid and something is owed
+- Total due computed differently per type: `monthly` uses `monthlyPrice`, `class_pack` uses `pricePerClass × totalClasses`
+
+### Membership status
+- `active`: not expired
+- `expiring`: expires within 7 days
+- `expired`: past `endDate`
+
+### Attendance / class tracking
+- `occurrenceStore` manages per-date instances of recurring events
+- Marking attendance calls `incrementClassesUsed` / `decrementClassesUsed` on the users store via cross-store `getState()` — keeps `classesUsed` always in sync
 
 ---
 
-## Dev / Infra
+## Performance Work
 
-- SSH configured for dual GitHub accounts (work: `ext-vogrigor_meli`, personal: `VoskanGrigoryan`) via `github.com-personal` host alias in `~/.ssh/config`
-- Personal repo remote set to `git@github.com-personal:VoskanGrigoryan/naksu-admin-desktop.git`
+- **Mock data centralized**: stores seeded once at app startup via `getState()` before React renders
+- **Artificial delays removed**: eliminated fake loading screens from the Users view
+- **Route lazy loading**: all views loaded with `React.lazy()` + `Suspense`
+- **Background prefetching**: all route chunks prefetched after initial render
+- **`useMemo` on Dashboard**: all derived state memoized
+- **Zustand selectors**: components subscribe to specific slices of state
+- **`useMemo` in forms**: instructor options, activity suggestions stabilized
+
+---
+
+## Build & Infra
+
+- TypeScript strict build passes clean (`tsc -b && vite build`)
+- Tauri production build produces `.deb`, `.rpm`, `.AppImage` (Linux)
+- SSH configured for dual GitHub accounts via `github.com-personal` host alias

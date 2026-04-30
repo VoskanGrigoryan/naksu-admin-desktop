@@ -1,22 +1,30 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
+  Avatar,
   Badge,
   Box,
+  Button,
   Grid,
   Group,
+  Modal,
   NumberFormatter,
+  NumberInput,
   Paper,
   Progress,
   RingProgress,
   ScrollArea,
+  Select,
   SimpleGrid,
   Stack,
   Text,
+  Textarea,
   Title,
   ThemeIcon,
+  Alert,
 } from "@mantine/core";
 import {
   IconBarbell,
+  IconBell,
   IconCalendarEvent,
   IconCircleCheck,
   IconClock,
@@ -25,54 +33,189 @@ import {
   IconUsers,
   IconAlertTriangle,
 } from "@tabler/icons-react";
-
 import { useComputedColorScheme } from "@mantine/core";
 import MainLayout from "../../layouts/main/MainLayout";
-import { useUsersStore } from "../../store/usersStore";
+import { useUsersStore, type ClassType, type PaymentMethod, type User } from "../../store/usersStore";
 import { useCalendarStore } from "../../store/calendarStore";
-import { getPaymentStatus } from "../../utils/helpers/getPaymentStatus";
+import { getPaymentStatus, getAttentionContext } from "../../utils/helpers/getPaymentStatus";
+import { getMembershipDue, getMembershipStatus } from "../../utils/helpers/membershipHelpers";
 import { classMeta, getAvatarColor, getInitials, paymentConfig } from "../users/columns";
-import { Avatar } from "@mantine/core";
 
 const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
 function StatCard({
-  icon,
-  iconColor,
-  label,
-  value,
-  sub,
+  icon, iconColor, label, value, sub,
 }: {
-  icon: React.ReactNode;
-  iconColor: string;
-  label: string;
-  value: React.ReactNode;
-  sub?: React.ReactNode;
+  icon: React.ReactNode; iconColor: string; label: string;
+  value: React.ReactNode; sub?: React.ReactNode;
 }) {
   return (
     <Paper withBorder p="lg" radius="md" shadow="sm">
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         <Stack gap={4}>
-          <Text size="xs" c="dimmed" tt="uppercase" fw={600} lts={0.5}>
-            {label}
-          </Text>
-          <Text fw={700} size="xl" lh={1.2}>
-            {value}
-          </Text>
+          <Text size="xs" c="dimmed" tt="uppercase" fw={600} lts={0.5}>{label}</Text>
+          <Text fw={700} size="xl" lh={1.2}>{value}</Text>
           {sub && <Text size="xs" c="dimmed">{sub}</Text>}
         </Stack>
-        <ThemeIcon variant="light" color={iconColor} size={40} radius="md">
-          {icon}
-        </ThemeIcon>
+        <ThemeIcon variant="light" color={iconColor} size={40} radius="md">{icon}</ThemeIcon>
       </Group>
     </Paper>
   );
 }
 
+// ── Quick Pay Modal ──────────────────────────────────────────────────────────
+
+const methodOptions = [
+  { value: "cash", label: "Efectivo" },
+  { value: "transfer", label: "Transferencia" },
+  { value: "card", label: "Tarjeta" },
+];
+
+function QuickPayModal({
+  user,
+  onClose,
+}: {
+  user: User | null;
+  onClose: () => void;
+}) {
+  const updateUser = useUsersStore((s) => s.updateUser);
+  const addPaymentRecord = useUsersStore((s) => s.addPaymentRecord);
+
+  const [amount, setAmount] = useState<number | string>("");
+  const [method, setMethod] = useState<string | null>("cash");
+  const [classType, setClassType] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+
+  const reset = () => { setAmount(""); setMethod("cash"); setClassType(null); setNote(""); };
+
+  const handleClose = () => { reset(); onClose(); };
+
+  const handleSubmit = () => {
+    if (!user || !amount || !method) return;
+    const num = Number(amount);
+    if (isNaN(num) || num <= 0) return;
+
+    // Add payment record
+    addPaymentRecord(user.id, {
+      id: crypto.randomUUID(),
+      date: new Date(),
+      amount: num,
+      method: method as PaymentMethod,
+      classType: classType as ClassType | undefined,
+      note: note.trim() || undefined,
+    });
+
+    // Update amountPaid on the matching membership (or first unpaid one)
+    const targetMembership = user.memberships.find(
+      (m) => classType ? m.classType === classType : getMembershipDue(m) > m.amountPaid,
+    );
+
+    if (targetMembership) {
+      const updatedMemberships = user.memberships.map((m) =>
+        m === targetMembership ? { ...m, amountPaid: m.amountPaid + num } : m,
+      );
+      updateUser(user.id, { memberships: updatedMemberships });
+    }
+
+    handleClose();
+  };
+
+  if (!user) return null;
+
+  const classOptions = user.memberships.map((m) => ({
+    value: m.classType,
+    label: classMeta[m.classType]?.label ?? m.classType,
+  }));
+
+  const totalDue = user.memberships.reduce((a, m) => a + getMembershipDue(m), 0);
+  const totalPaid = user.memberships.reduce((a, m) => a + m.amountPaid, 0);
+  const outstanding = Math.max(0, totalDue - totalPaid);
+
+  return (
+    <Modal
+      opened={!!user}
+      onClose={handleClose}
+      title={
+        <Group gap="sm">
+          <Avatar size={32} radius="xl" color={getAvatarColor(user.name)} variant="light">
+            {getInitials(user.name)}
+          </Avatar>
+          <div>
+            <Text fw={600} size="sm">{user.name}</Text>
+            <Text size="xs" c="dimmed">Registrar pago</Text>
+          </div>
+        </Group>
+      }
+      centered
+      size="sm"
+    >
+      <Stack gap="md">
+        {outstanding > 0 && (
+          <Alert color="orange" variant="light" p="xs">
+            <Text size="xs">Saldo pendiente: <strong><NumberFormatter prefix="$ " value={outstanding} thousandSeparator /></strong></Text>
+          </Alert>
+        )}
+
+        <NumberInput
+          label="Monto"
+          placeholder="0"
+          prefix="$ "
+          thousandSeparator=","
+          min={1}
+          value={amount}
+          onChange={setAmount}
+          allowNegative={false}
+        />
+
+        <Select
+          label="Método de pago"
+          data={methodOptions}
+          value={method}
+          onChange={setMethod}
+        />
+
+        {classOptions.length > 1 && (
+          <Select
+            label="Disciplina"
+            placeholder="Seleccionar (opcional)"
+            data={classOptions}
+            value={classType}
+            onChange={setClassType}
+            clearable
+          />
+        )}
+
+        <Textarea
+          label="Nota"
+          placeholder="Opcional"
+          value={note}
+          onChange={(e) => setNote(e.currentTarget.value)}
+          rows={2}
+        />
+
+        <Group justify="flex-end" gap="xs">
+          <Button variant="outline" color="gray" onClick={handleClose}>Cancelar</Button>
+          <Button
+            color="green"
+            disabled={!amount || Number(amount) <= 0 || !method}
+            onClick={handleSubmit}
+            leftSection={<IconCurrencyDollar size={16} />}
+          >
+            Registrar
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  );
+}
+
+// ── Dashboard ────────────────────────────────────────────────────────────────
+
 const Dashboard = () => {
   const users = useUsersStore((s) => s.users);
   const events = useCalendarStore((s) => s.events);
   const colorScheme = useComputedColorScheme("light");
+  const [quickPayUser, setQuickPayUser] = useState<User | null>(null);
 
   const rowStyles = useMemo(() => ({
     rowBg: colorScheme === "dark" ? "var(--mantine-color-dark-6)" : "var(--mantine-color-gray-0)",
@@ -87,14 +230,8 @@ const Dashboard = () => {
     const activeCount = payingUsers.filter((u) => u.active).length;
     const totalClients = payingUsers.length;
 
-    const totalCollected = payingUsers.reduce(
-      (acc, u) => acc + u.memberships.reduce((a, m) => a + m.amountPaid, 0),
-      0,
-    );
-    const totalDue = payingUsers.reduce(
-      (acc, u) => acc + u.memberships.reduce((a, m) => a + (m.pricePerClass ?? 0) * m.totalClasses, 0),
-      0,
-    );
+    const totalCollected = payingUsers.reduce((acc, u) => acc + u.memberships.reduce((a, m) => a + m.amountPaid, 0), 0);
+    const totalDue = payingUsers.reduce((acc, u) => acc + u.memberships.reduce((a, m) => a + getMembershipDue(m), 0), 0);
     const collectedPct = totalDue > 0 ? Math.round((totalCollected / totalDue) * 100) : 0;
 
     const paidCount = payingUsers.filter((u) => getPaymentStatus(u) === "paid").length;
@@ -106,19 +243,29 @@ const Dashboard = () => {
 
     const disciplineMap: Record<string, number> = {};
     payingUsers.forEach((u) => {
-      u.memberships.forEach((m) => {
-        disciplineMap[m.classType] = (disciplineMap[m.classType] ?? 0) + 1;
-      });
+      u.memberships.forEach((m) => { disciplineMap[m.classType] = (disciplineMap[m.classType] ?? 0) + 1; });
     });
     const sortedDisciplines = Object.entries(disciplineMap).sort((a, b) => b[1] - a[1]);
     const maxCount = sortedDisciplines[0]?.[1] ?? 1;
     const topDiscipline = sortedDisciplines[0];
 
+    // Expiring memberships alert (within 7 days, not expired yet)
+    const expiringUsers = payingUsers.filter((u) =>
+      u.memberships.some((m) => getMembershipStatus(m) === "expiring"),
+    );
+
+    // Attention: unpaid OR expired memberships, sorted by urgency
     const attentionUsers = payingUsers
       .filter((u) => getPaymentStatus(u) !== "paid")
+      .map((u) => ({ user: u, ctx: getAttentionContext(u) }))
       .sort((a, b) => {
-        const order = { overdue: 0, pending: 1, paid: 2 } as const;
-        return order[getPaymentStatus(a)] - order[getPaymentStatus(b)];
+        // overdue first, then by days left ascending (most urgent first)
+        const orderStatus = { overdue: 0, pending: 1, paid: 2 } as const;
+        const statusDiff = orderStatus[a.ctx.paymentStatus] - orderStatus[b.ctx.paymentStatus];
+        if (statusDiff !== 0) return statusDiff;
+        const aDay = a.ctx.daysLeft ?? 9999;
+        const bDay = b.ctx.daysLeft ?? 9999;
+        return aDay - bDay;
       });
 
     return {
@@ -127,7 +274,7 @@ const Dashboard = () => {
       paidCount, pendingCount, overdueCount,
       paidPct, pendingPct, overduePct,
       sortedDisciplines, maxCount, topDiscipline,
-      attentionUsers,
+      attentionUsers, expiringUsers,
     };
   }, [users]);
 
@@ -150,7 +297,7 @@ const Dashboard = () => {
     paidCount, pendingCount, overdueCount,
     paidPct, pendingPct, overduePct,
     sortedDisciplines, maxCount, topDiscipline,
-    attentionUsers,
+    attentionUsers, expiringUsers,
   } = userStats;
 
   const { todayDow, weekClasses, classesThisWeek } = calendarStats;
@@ -162,7 +309,22 @@ const Dashboard = () => {
 
         <Title order={3} fw={700} mb="lg">Panel principal</Title>
 
-        {/* ── KPI stat cards ── */}
+        {/* Expiry alert */}
+        {expiringUsers.length > 0 && (
+          <Alert
+            icon={<IconBell size={16} />}
+            color="yellow"
+            variant="light"
+            mb="md"
+            title={`${expiringUsers.length} membresía${expiringUsers.length > 1 ? "s" : ""} por vencer`}
+          >
+            <Text size="sm">
+              {expiringUsers.map((u) => u.name).join(", ")} — vencen en los próximos 7 días.
+            </Text>
+          </Alert>
+        )}
+
+        {/* KPI cards */}
         <SimpleGrid cols={4} spacing="md">
           <StatCard
             icon={<IconUsers size={20} stroke={1.5} />}
@@ -199,9 +361,8 @@ const Dashboard = () => {
           />
         </SimpleGrid>
 
-        {/* ── Middle row ── */}
+        {/* Middle row */}
         <Grid mt="md" gutter="md">
-          {/* Discipline breakdown */}
           <Grid.Col span={8}>
             <Paper withBorder p="lg" radius="md" shadow="sm" h="100%">
               <Title order={4} fw={600} mb="md">Alumnos por disciplina</Title>
@@ -216,30 +377,14 @@ const Dashboard = () => {
                     const meta = classMeta[type];
                     return (
                       <Group key={type} gap="sm" align="center">
-                        <Badge
-                          size="md"
-                          radius="sm"
-                          variant="light"
-                          color={meta?.color ?? "gray"}
-                          w={44}
-                          style={{ flexShrink: 0, textAlign: "center" }}
-                        >
+                        <Badge size="md" radius="sm" variant="light" color={meta?.color ?? "gray"} w={44} style={{ flexShrink: 0, textAlign: "center" }}>
                           {meta?.initials ?? "?"}
                         </Badge>
-                        <Text size="sm" fw={500} w={160} style={{ flexShrink: 0 }}>
-                          {meta?.label ?? type}
-                        </Text>
+                        <Text size="sm" fw={500} w={160} style={{ flexShrink: 0 }}>{meta?.label ?? type}</Text>
                         <Box style={{ flex: 1 }}>
-                          <Progress
-                            value={(count / maxCount) * 100}
-                            color={meta?.color ?? "blue"}
-                            size="md"
-                            radius="xl"
-                          />
+                          <Progress value={(count / maxCount) * 100} color={meta?.color ?? "blue"} size="md" radius="xl" />
                         </Box>
-                        <Text size="sm" c="dimmed" w={24} ta="right" style={{ flexShrink: 0 }}>
-                          {count}
-                        </Text>
+                        <Text size="sm" c="dimmed" w={24} ta="right" style={{ flexShrink: 0 }}>{count}</Text>
                       </Group>
                     );
                   })}
@@ -248,15 +393,12 @@ const Dashboard = () => {
             </Paper>
           </Grid.Col>
 
-          {/* Payment status ring */}
           <Grid.Col span={4}>
             <Paper withBorder p="lg" radius="md" shadow="sm" h="100%">
               <Title order={4} fw={600} mb="md">Estado de pagos</Title>
               <Stack align="center" gap="md">
                 <RingProgress
-                  size={160}
-                  thickness={18}
-                  roundCaps
+                  size={160} thickness={18} roundCaps
                   sections={[
                     { value: paidPct, color: "green", tooltip: `Abonado: ${paidCount}` },
                     { value: pendingPct, color: "yellow", tooltip: `Pendiente: ${pendingCount}` },
@@ -289,9 +431,9 @@ const Dashboard = () => {
           </Grid.Col>
         </Grid>
 
-        {/* ── Bottom row ── */}
+        {/* Bottom row */}
         <Grid mt="md" gutter="md" mb={8}>
-          {/* Attention needed */}
+          {/* Attention list */}
           <Grid.Col span={6}>
             <Paper withBorder p="lg" radius="md" shadow="sm">
               <Group gap="xs" mb="md">
@@ -300,6 +442,7 @@ const Dashboard = () => {
                 </ThemeIcon>
                 <Title order={4} fw={600}>Requieren atención</Title>
               </Group>
+
               {attentionUsers.length === 0 ? (
                 <Stack align="center" gap={6} py="md">
                   <IconCircleCheck size={32} stroke={1.5} color="var(--mantine-color-green-5)" />
@@ -308,37 +451,51 @@ const Dashboard = () => {
               ) : (
                 <ScrollArea.Autosize mah={240} type="hover" scrollbarSize={6} offsetScrollbars>
                   <Stack gap="xs">
-                    {attentionUsers.map((u) => {
-                      const status = getPaymentStatus(u);
-                      const cfg = paymentConfig[status];
-                      const due = u.memberships.reduce((a, m) => a + (m.pricePerClass ?? 0) * m.totalClasses, 0);
-                      const paid = u.memberships.reduce((a, m) => a + m.amountPaid, 0);
-                      const outstanding = due - paid;
+                    {attentionUsers.map(({ user, ctx }) => {
+                      const cfg = paymentConfig[ctx.paymentStatus];
+                      const daysText = ctx.daysLeft === null
+                        ? null
+                        : ctx.daysLeft < 0
+                          ? `Venció hace ${Math.abs(ctx.daysLeft)}d`
+                          : ctx.daysLeft === 0
+                            ? "Vence hoy"
+                            : `Vence en ${ctx.daysLeft}d`;
+
                       return (
                         <Group
-                          key={u.id}
+                          key={user.id}
                           justify="space-between"
                           p="xs"
                           style={{
                             backgroundColor: rowBg,
                             borderRadius: 8,
                             border: rowBorder,
+                            cursor: "pointer",
                           }}
+                          onClick={() => setQuickPayUser(user)}
                         >
                           <Group gap="sm">
-                            <Avatar size={30} radius="xl" color={getAvatarColor(u.name)} variant="light">
-                              {getInitials(u.name)}
+                            <Avatar size={30} radius="xl" color={getAvatarColor(user.name)} variant="light">
+                              {getInitials(user.name)}
                             </Avatar>
                             <div>
-                              <Text size="sm" fw={500}>{u.name}</Text>
-                              <Badge size="xs" variant="dot" color={cfg.color}>{cfg.label}</Badge>
+                              <Text size="sm" fw={500}>{user.name}</Text>
+                              <Group gap={4}>
+                                <Badge size="xs" variant="dot" color={cfg.color}>{cfg.label}</Badge>
+                                {daysText && (
+                                  <Text size="xs" c="dimmed">{daysText}</Text>
+                                )}
+                              </Group>
                             </div>
                           </Group>
-                          {outstanding > 0 && (
-                            <Text size="sm" c="dimmed">
-                              <NumberFormatter prefix="$ " value={outstanding} thousandSeparator />
-                            </Text>
-                          )}
+                          <Stack gap={2} align="flex-end">
+                            {ctx.outstanding > 0 && (
+                              <Text size="sm" fw={500} c="red.6">
+                                <NumberFormatter prefix="$ " value={ctx.outstanding} thousandSeparator />
+                              </Text>
+                            )}
+                            <Text size="xs" c="dimmed">Registrar pago →</Text>
+                          </Stack>
                         </Group>
                       );
                     })}
@@ -372,14 +529,7 @@ const Dashboard = () => {
                       return (
                         <Box key={`${event.id}-${dow}`}>
                           {showDayLabel && (
-                            <Text
-                              size="xs"
-                              fw={700}
-                              tt="uppercase"
-                              c={isToday ? "blue" : "dimmed"}
-                              mt={i > 0 ? "xs" : 0}
-                              mb={4}
-                            >
+                            <Text size="xs" fw={700} tt="uppercase" c={isToday ? "blue" : "dimmed"} mt={i > 0 ? "xs" : 0} mb={4}>
                               {isToday ? `Hoy · ${dayNames[dow]}` : dayNames[dow]}
                             </Text>
                           )}
@@ -394,23 +544,27 @@ const Dashboard = () => {
                             }}
                           >
                             <Group gap="sm" align="center">
-                              <Box
-                                w={10}
-                                h={10}
-                                style={{
-                                  borderRadius: "50%",
-                                  backgroundColor: event.backgroundColor,
-                                  flexShrink: 0,
-                                }}
-                              />
+                              <Box w={10} h={10} style={{ borderRadius: "50%", backgroundColor: event.backgroundColor, flexShrink: 0 }} />
                               <Text size="sm" fw={500}>{event.title}</Text>
                               {event.extendedProps?.instructor && (
                                 <Text size="sm" c="dimmed">{event.extendedProps.instructor}</Text>
                               )}
                             </Group>
-                            <Text size="xs" c="dimmed">
-                              {event.startTime.slice(0, 5)} – {event.endTime.slice(0, 5)}
-                            </Text>
+                            <Group gap="xs" align="center">
+                              {event.maxCapacity !== undefined && (() => {
+                                const enrolled = users.filter((u) =>
+                                  u.enrollments.some((e) => e.eventId === event.id),
+                                ).length;
+                                return (
+                                  <Badge size="xs" variant="light" color={enrolled >= event.maxCapacity! ? "red" : "gray"}>
+                                    {enrolled}/{event.maxCapacity}
+                                  </Badge>
+                                );
+                              })()}
+                              <Text size="xs" c="dimmed">
+                                {event.startTime.slice(0, 5)} – {event.endTime.slice(0, 5)}
+                              </Text>
+                            </Group>
                           </Group>
                         </Box>
                       );
@@ -423,6 +577,8 @@ const Dashboard = () => {
         </Grid>
 
       </ScrollArea>
+
+      <QuickPayModal user={quickPayUser} onClose={() => setQuickPayUser(null)} />
     </MainLayout>
   );
 };

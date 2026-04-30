@@ -10,23 +10,22 @@ export const classTypeEnum = z.enum([
   "yoga",
 ]);
 
-export const membershipItemSchema = z.object({
-  classType: classTypeEnum,
-
-  totalClasses: z
-    .number()
-    .int("Debe ser un número entero")
-    .min(1, "Debe ser mayor a 0"),
-
-  amountPaid: z
-    .number()
-    .min(0, "No puede ser negativo"),
-
-  pricePerClass: z
-    .number()
-    .min(0, "No puede ser negativo")
-    .optional(),
-});
+export const membershipItemSchema = z
+  .object({
+    classType: classTypeEnum,
+    membershipType: z.enum(["monthly", "class_pack"]).default("class_pack"),
+    startDate: z.coerce.date(),
+    endDate: z.coerce.date(),
+    amountPaid: z.number().min(0, "No puede ser negativo"),
+    totalClasses: z.number().int("Debe ser entero").min(0).default(0),
+    classesUsed: z.number().int().min(0).default(0),
+    pricePerClass: z.number().min(0).optional(),
+    monthlyPrice: z.number().min(0).optional(),
+  })
+  .refine((d) => d.endDate >= d.startDate, {
+    message: "La fecha fin debe ser posterior al inicio",
+    path: ["endDate"],
+  });
 
 export const membershipsSchema = z.object({
   memberships: z.array(membershipItemSchema),

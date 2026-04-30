@@ -3,20 +3,14 @@ import { z } from "zod";
 export const eventSchema = z
   .object({
     activity: z.string().trim().min(1, "La actividad es obligatoria"),
-
     instructor: z.string().trim().min(1, "El instructor es obligatorio"),
-
     startTime: z.string().min(1, "Hora inicio obligatoria"),
-
     endTime: z.string().min(1, "Hora fin obligatoria"),
-
     daysOfWeek: z.array(z.string()).min(1, "Seleccione al menos un día"),
-
     startDate: z.coerce.date(),
-    
     endDate: z.coerce.date().nullable().optional(),
-
     color: z.string().min(1),
+    maxCapacity: z.number().int().positive().nullable().optional(),
   })
   .refine((data) => data.endTime > data.startTime, {
     message: "La hora fin debe ser mayor a la hora inicio",

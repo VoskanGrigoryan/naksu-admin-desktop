@@ -1,6 +1,9 @@
+import type { ClassType } from "../store/usersStore";
+
 export type CalendarEvent = {
-  id: string;
+  id?: string;
   title: string;
+  classType?: ClassType;
   daysOfWeek: number[];
   startTime: string;
   endTime: string;
@@ -8,6 +11,7 @@ export type CalendarEvent = {
   endRecur?: string;
   backgroundColor: string;
   borderColor: string;
+  maxCapacity?: number;
   extendedProps?: {
     instructor: string;
   };

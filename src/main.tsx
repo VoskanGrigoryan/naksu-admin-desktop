@@ -6,11 +6,14 @@ import { BrowserRouter } from "react-router-dom";
 import { MantineProvider, createTheme, type MantineColorsTuple } from "@mantine/core";
 import { useUsersStore } from "./store/usersStore";
 import { useCalendarStore } from "./store/calendarStore";
+import { useOccurrenceStore } from "./store/occurrenceStore";
 import { mockUsers } from "./mocks/userTableData";
 import { mockCalendarEvents } from "./mocks/calendarData";
+import { mockOccurrences } from "./mocks/occurrenceData";
 
 useUsersStore.getState().setUsers(mockUsers);
 useCalendarStore.getState().setEvents(mockCalendarEvents);
+useOccurrenceStore.getState().setOccurrences(mockOccurrences);
 import { Notifications } from "@mantine/notifications";
 
 const blue: MantineColorsTuple = [

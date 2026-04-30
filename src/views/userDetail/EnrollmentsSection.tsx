@@ -53,7 +53,7 @@ const EnrollmentsSection = ({
       .filter((x): x is { enrollment: Enrollment; event: NonNullable<typeof x.event> } =>
         x.event !== undefined,
       );
-    const availableEvents = events.filter((e) => !enrolledEventIds.has(e.id));
+    const availableEvents = events.filter((e) => !enrolledEventIds.has(e.id!));
     return { enrolledRows, availableEvents };
   }, [enrollments, events]);
 
@@ -176,7 +176,7 @@ const EnrollmentsSection = ({
                   p="sm"
                   style={{ cursor: "pointer" }}
                   onClick={() => {
-                    onAdd(event.id);
+                    onAdd(event.id!);
                     close();
                   }}
                 >
