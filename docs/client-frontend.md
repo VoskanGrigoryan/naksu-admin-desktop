@@ -18,10 +18,10 @@ Give members a self-service portal so the gym owner/staff don't have to manually
 - Account linked to gym by invite code or QR code at front desk (prevents random signups from outside the gym)
 
 ### Membership & Payment
-- View current membership plan (class type, classes purchased, classes remaining, expiry date)
+- View current membership plan: type (monthly / class pack), classes purchased, classes remaining, expiry date
 - Add and manage payment methods (card, optionally cash/transfer with manual confirmation flow)
 - Pay for or renew a membership plan directly
-- View payment history
+- View full payment history (mirrors what admin sees in user detail)
 
 ### Class Schedule
 - Browse the full weekly recurring class schedule
@@ -32,13 +32,14 @@ Give members a self-service portal so the gym owner/staff don't have to manually
 
 ### Attendance & History
 - View personal attendance history (which classes attended, on which dates)
-- See classes remaining on current membership updated in real time as attendance is logged
+- Classes remaining on class-pack membership updated in real time as attendance is logged by admin
+- See if a class occurrence has been cancelled before showing up
 
 ### Notifications
 - Reminder before a class they're enrolled in
 - Alert when membership is about to expire (e.g., 3 days out)
 - Confirmation when a payment is processed
-- Notice if a class is cancelled
+- Notice if a class occurrence is cancelled
 
 ---
 
@@ -50,8 +51,9 @@ Give members a self-service portal so the gym owner/staff don't have to manually
 | Enroll in class | Client self-serves | Admin can enroll/remove manually |
 | Pay for membership | Client pays via portal | Admin can mark as paid manually (cash etc.) |
 | View schedule | Read-only | Admin creates/edits the schedule |
-| Check in to class | Automatic on enrollment + attendance log | Admin marks attendance manually if needed |
-| Cancel a class occurrence | N/A | Admin handles it |
+| Check in to class | Automatic on enrollment + attendance log | Admin marks attendance manually |
+| Cancel a class occurrence | N/A — sees it as cancelled | Admin handles the cancellation |
+| View payment history | Read-only | Admin can add/edit payment records |
 
 The admin app is the source of truth. The client frontend reflects what the admin has configured and lets members handle the routine self-service operations that would otherwise require staff time.
 
@@ -60,5 +62,18 @@ The admin app is the source of truth. The client frontend reflects what the admi
 ## Tech (Proposed)
 - **React** (web, not Tauri — needs to be accessible on any device)
 - **Mantine** — keep consistent with admin for shared component logic if applicable
-- Same backend/API as the admin app
+- Same backend/API as the admin app (not yet built)
 - Mobile-first layout (most members will use their phone)
+
+---
+
+## Dependency on Backend
+
+Neither the admin app nor the client frontend currently has a real backend. Both run entirely on in-memory mock data. Before the client frontend can be built, a real API/backend needs to exist so that:
+
+- Data persists between sessions
+- Admin changes are visible to clients in real time
+- Authentication is real (not mocked)
+- Payments can be processed
+
+The backend is the prerequisite for any meaningful client frontend work.

@@ -132,7 +132,7 @@ const Calendar = ({ events }: { events: EnrichedEvent[] }) => {
                         size="xs"
                         variant="filled"
                         color={enrolledCount >= maxCapacity ? "red" : "white"}
-                        style={{ color: enrolledCount >= maxCapacity ? "white" : "inherit", padding: "0 4px" }}
+                        style={{ color: enrolledCount >= maxCapacity ? "white" : "#333", padding: "0 4px" }}
                       >
                         {enrolledCount}/{maxCapacity}
                       </Badge>
